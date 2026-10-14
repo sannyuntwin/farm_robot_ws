@@ -35,6 +35,8 @@ setup(
     description='Smart autonomous farming robot simulation',
     license='Apache-2.0',
     entry_points={
-        'console_scripts': [],
+        'console_scripts': [
+            'obstacle_avoidance = farm_robot.obstacle_avoidance:main',
+        ],
     },
 )
