@@ -15,12 +15,12 @@ class ObstacleAvoidance(Node):
         self.turn_speed = 0.45
 
         # Stop only when something is very close in front.
-        self.emergency_distance = 0.30
-        self.caution_distance = 0.65
+        self.emergency_distance = 0.45
+        self.caution_distance = 1.00
 
         # Keep a little distance from crop rows.
-        self.target_side_distance = 0.75
-        self.centering_gain = 0.7
+        self.target_side_distance = 0.85
+        self.centering_gain = 1.0
 
         self.scan_subscriber = self.create_subscription(
             LaserScan,
@@ -67,7 +67,7 @@ class ObstacleAvoidance(Node):
             self.cmd_publisher.publish(command)
             return
 
-        front = self.get_sector_distance(scan, 0, 20)
+        front = self.get_sector_distance(scan, 0, 30)
         left = self.get_sector_distance(scan, 90, 20)
         right = self.get_sector_distance(scan, -90, 20)
 
