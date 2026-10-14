@@ -71,14 +71,23 @@ def generate_launch_description():
         output='screen'
     )
     
+    
     cmd_vel_bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
         arguments=[
-            '/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist'
+            # ROS 2 -> Gazebo: control the robot
+            '/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist',
+
+            # Gazebo -> ROS 2: receive LiDAR data
+            '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
+
+            # Gazebo -> ROS 2: receive odometry data
+            '/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry',
         ],
         output='screen'
     )
+
 
     return LaunchDescription([
         gazebo,
