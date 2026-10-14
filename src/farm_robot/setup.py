@@ -35,7 +35,7 @@ setup(
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='handsome',
-    maintainer_email='your_email@example.com',
+    maintainer_email='sannyuntwin21@gmail.com',
     description='Smart autonomous farming robot simulation',
     license='Apache-2.0',
     entry_points={

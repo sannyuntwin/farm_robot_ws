@@ -90,9 +90,16 @@ def generate_launch_description():
     )
 
 
+    odom_tf_broadcaster = Node(
+        package='farm_robot',
+        executable='odom_tf_broadcaster',
+        output='screen'
+    )
+
     return LaunchDescription([
         gazebo,
         robot_state_publisher,
         spawn_robot,
-        cmd_vel_bridge
+        cmd_vel_bridge,
+        odom_tf_broadcaster,
     ])
