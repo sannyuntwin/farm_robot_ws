@@ -64,9 +64,10 @@ def generate_launch_description():
         arguments=[
             '-name', 'farm_robot',
             '-topic', 'robot_description',
-            '-x', '0',
-            '-y', '0',
-            '-z', '0.2'
+            '-x', '1.0',
+            '-y', '-3.5',
+            '-z', '0.2',
+            '-Y', '1.5708'
         ],
         output='screen'
     )
