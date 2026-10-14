@@ -29,6 +29,22 @@ def generate_launch_description():
         )]
     )
 
+    lifecycle_manager_slam = TimerAction(
+        period=7.0,
+        actions=[Node(
+            package='nav2_lifecycle_manager',
+            executable='lifecycle_manager',
+            name='lifecycle_manager_slam',
+            output='screen',
+            parameters=[{
+                'use_sim_time': True,
+                'autostart': True,
+                'bond_timeout': 0.0,
+                'node_names': ['slam_toolbox']
+            }]
+        )]
+    )
+
     rviz = TimerAction(
         period=8.0,
         actions=[Node(
@@ -42,5 +58,6 @@ def generate_launch_description():
     return LaunchDescription([
         simulation,
         slam,
+        lifecycle_manager_slam,
         rviz,
     ])
