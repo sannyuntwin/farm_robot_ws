@@ -37,6 +37,7 @@ setup(
     entry_points={
         'console_scripts': [
             'obstacle_avoidance = farm_robot.obstacle_avoidance:main',
+            'scan_frame_fixer = farm_robot.scan_frame_fixer:main',
         ],
     },
 )
