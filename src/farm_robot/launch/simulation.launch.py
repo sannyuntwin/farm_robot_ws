@@ -90,15 +90,11 @@ def generate_launch_description():
     )
 
 
-    joint_state_bridge = Node(
-        package='ros_gz_bridge',
-        executable='parameter_bridge',
-        arguments=[
-            '/model/farm_robot/joint_state@sensor_msgs/msg/JointState[gz.msgs.Model',
-        ],
-        remappings=[
-            ('/model/farm_robot/joint_state', '/joint_states'),
-        ],
+    joint_state_publisher = Node(
+        package='joint_state_publisher',
+        executable='joint_state_publisher',
+        name='joint_state_publisher',
+        parameters=[{'use_sim_time': True}],
         output='screen'
     )
 
@@ -119,7 +115,7 @@ def generate_launch_description():
         robot_state_publisher,
         spawn_robot,
         cmd_vel_bridge,
-        joint_state_bridge,
+        joint_state_publisher,
         odom_tf_broadcaster,
         scan_frame_fixer,
     ])
