@@ -22,10 +22,10 @@ echo ""
 
 # Topics
 echo "--- Topics ---"
-check "/clock publishing"        "ros2 topic hz /clock --num-messages 3 2>&1 | grep -q 'average rate'"
-check "/scan_fixed publishing"   "ros2 topic hz /scan_fixed --num-messages 3 2>&1 | grep -q 'average rate'"
-check "/odom publishing"         "ros2 topic hz /odom --num-messages 3 2>&1 | grep -q 'average rate'"
-check "/joint_states publishing" "ros2 topic hz /joint_states --num-messages 3 2>&1 | grep -q 'average rate'"
+check "/clock publishing"        "timeout 5 ros2 topic echo /clock --once 2>&1 | grep -q 'sec'"
+check "/scan_fixed publishing"   "timeout 5 ros2 topic echo /scan_fixed --once 2>&1 | grep -q 'frame_id'"
+check "/odom publishing"         "timeout 5 ros2 topic echo /odom --once 2>&1 | grep -q 'frame_id'"
+check "/joint_states publishing" "timeout 5 ros2 topic echo /joint_states --once 2>&1 | grep -q 'name'"
 check "/map published"           "ros2 topic info /map 2>&1 | grep -q 'Publisher count: 1'"
 check "/amcl_pose published"     "ros2 topic info /amcl_pose 2>&1 | grep -q 'Publisher count: 1'"
 
@@ -33,9 +33,9 @@ echo ""
 
 # TF chain
 echo "--- TF Chain ---"
-check "map -> odom"              "ros2 run tf2_ros tf2_echo map odom 2>&1 | grep -q 'Translation'"
-check "odom -> base_link"        "ros2 run tf2_ros tf2_echo odom base_link 2>&1 | grep -q 'Translation'"
-check "base_link -> lidar_link"  "ros2 run tf2_ros tf2_echo base_link lidar_link 2>&1 | grep -q 'Translation'"
+check "map -> odom"              "timeout 5 ros2 run tf2_ros tf2_echo map odom 2>&1 | grep -q 'Translation'"
+check "odom -> base_link"        "timeout 5 ros2 run tf2_ros tf2_echo odom base_link 2>&1 | grep -q 'Translation'"
+check "base_link -> lidar_link"  "timeout 5 ros2 run tf2_ros tf2_echo base_link lidar_link 2>&1 | grep -q 'Translation'"
 
 echo ""
 
