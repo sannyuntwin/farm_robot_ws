@@ -44,12 +44,13 @@ if [ "$MODE" = "slam" ]; then
     check "/map publishing (SLAM)"   "ros2 topic info /map 2>&1 | grep -q 'Publisher count: 1'"
 else
     echo "--- Nav2 Nodes ---"
-    check "/amcl_pose published"     "ros2 topic info /amcl_pose 2>&1 | grep -q 'Publisher count: 1'"
-    check "map_server active"        "ros2 lifecycle get /map_server 2>&1 | grep -q 'active'"
-    check "amcl active"              "ros2 lifecycle get /amcl 2>&1 | grep -q 'active'"
-    check "controller_server active" "ros2 lifecycle get /controller_server 2>&1 | grep -q 'active'"
-    check "planner_server active"    "ros2 lifecycle get /planner_server 2>&1 | grep -q 'active'"
-    check "bt_navigator active"      "ros2 lifecycle get /bt_navigator 2>&1 | grep -q 'active'"
+    check "/amcl_pose published"        "ros2 topic info /amcl_pose 2>&1 | grep -q 'Publisher count: 1'"
+    check "map_server active"           "ros2 lifecycle get /map_server 2>&1 | grep -q 'active'"
+    check "amcl active"                 "ros2 lifecycle get /amcl 2>&1 | grep -q 'active'"
+    check "controller_server active"    "ros2 lifecycle get /controller_server 2>&1 | grep -q 'active'"
+    check "planner_server active"       "ros2 lifecycle get /planner_server 2>&1 | grep -q 'active'"
+    check "bt_navigator active"         "ros2 lifecycle get /bt_navigator 2>&1 | grep -q 'active'"
+    check "follow_waypoints available"  "ros2 action info /follow_waypoints 2>&1 | grep -q 'nav2_msgs'"
 fi
 
 echo ""
