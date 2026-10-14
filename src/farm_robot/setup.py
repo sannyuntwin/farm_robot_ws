@@ -27,6 +27,10 @@ setup(
             os.path.join('share', package_name, 'worlds'),
             glob('worlds/*'),
         ),
+        (
+            os.path.join('share', package_name, 'config'),
+            glob('config/*.yaml'),
+        ),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
