@@ -2,6 +2,8 @@
 source /opt/ros/jazzy/setup.bash
 source ~/ros2/farm_robot_ws/install/setup.bash
 
+MODE=${1:-nav}   # usage: ./test.sh [nav|slam]  default: nav
+
 PASS=0
 FAIL=0
 
@@ -17,21 +19,18 @@ check() {
     fi
 }
 
-echo "=== Farm Robot System Check ==="
+echo "=== Farm Robot System Check ($MODE mode) ==="
 echo ""
 
-# Topics - check publisher exists (instant, no waiting)
 echo "--- Topics ---"
 check "/clock publishing"        "ros2 topic info /clock 2>&1 | grep -q 'Publisher count: 1'"
 check "/scan_fixed publishing"   "ros2 topic info /scan_fixed 2>&1 | grep -q 'Publisher count: 1'"
 check "/odom publishing"         "ros2 topic info /odom 2>&1 | grep -q 'Publisher count: 1'"
 check "/joint_states publishing" "ros2 topic info /joint_states 2>&1 | grep -q 'Publisher count: 1'"
 check "/map published"           "ros2 topic info /map 2>&1 | grep -q 'Publisher count: 1'"
-check "/amcl_pose published"     "ros2 topic info /amcl_pose 2>&1 | grep -q 'Publisher count: 1'"
 
 echo ""
 
-# TF chain
 echo "--- TF Chain ---"
 check "map -> odom"              "timeout 10 ros2 run tf2_ros tf2_echo map odom 2>&1 | grep -q 'Translation'"
 check "odom -> base_link"        "timeout 10 ros2 run tf2_ros tf2_echo odom base_link 2>&1 | grep -q 'Translation'"
@@ -39,13 +38,19 @@ check "base_link -> lidar_link"  "timeout 10 ros2 run tf2_ros tf2_echo base_link
 
 echo ""
 
-# Nav2 nodes
-echo "--- Nav2 Nodes ---"
-check "map_server active"        "ros2 lifecycle get /map_server 2>&1 | grep -q 'active'"
-check "amcl active"              "ros2 lifecycle get /amcl 2>&1 | grep -q 'active'"
-check "controller_server active" "ros2 lifecycle get /controller_server 2>&1 | grep -q 'active'"
-check "planner_server active"    "ros2 lifecycle get /planner_server 2>&1 | grep -q 'active'"
-check "bt_navigator active"      "ros2 lifecycle get /bt_navigator 2>&1 | grep -q 'active'"
+if [ "$MODE" = "slam" ]; then
+    echo "--- SLAM ---"
+    check "slam_toolbox running"     "ros2 node list 2>&1 | grep -q '/slam_toolbox'"
+    check "/map publishing (SLAM)"   "ros2 topic info /map 2>&1 | grep -q 'Publisher count: 1'"
+else
+    echo "--- Nav2 Nodes ---"
+    check "/amcl_pose published"     "ros2 topic info /amcl_pose 2>&1 | grep -q 'Publisher count: 1'"
+    check "map_server active"        "ros2 lifecycle get /map_server 2>&1 | grep -q 'active'"
+    check "amcl active"              "ros2 lifecycle get /amcl 2>&1 | grep -q 'active'"
+    check "controller_server active" "ros2 lifecycle get /controller_server 2>&1 | grep -q 'active'"
+    check "planner_server active"    "ros2 lifecycle get /planner_server 2>&1 | grep -q 'active'"
+    check "bt_navigator active"      "ros2 lifecycle get /bt_navigator 2>&1 | grep -q 'active'"
+fi
 
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="
