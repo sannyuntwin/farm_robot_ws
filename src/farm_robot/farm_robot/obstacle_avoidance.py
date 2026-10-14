@@ -24,7 +24,7 @@ class ObstacleAvoidance(Node):
 
         self.scan_subscriber = self.create_subscription(
             LaserScan,
-            '/scan',
+            '/scan_fixed',
             self.scan_callback,
             10
         )
