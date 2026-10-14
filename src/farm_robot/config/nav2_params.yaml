@@ -205,12 +205,14 @@ lifecycle_manager_localization:
   ros__parameters:
     use_sim_time: true
     autostart: true
+    bond_timeout: 0.0
     node_names: [map_server, amcl]
 
 lifecycle_manager_navigation:
   ros__parameters:
     use_sim_time: true
     autostart: true
+    bond_timeout: 0.0
     node_names:
       - controller_server
       - planner_server

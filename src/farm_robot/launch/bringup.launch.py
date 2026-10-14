@@ -15,9 +15,9 @@ def generate_launch_description():
         ])
     )
 
-    # Delay Nav2 by 8s so Gazebo and robot spawn first
+    # Delay Nav2 by 15s so Gazebo and robot spawn first
     navigation = TimerAction(
-        period=8.0,
+        period=15.0,
         actions=[IncludeLaunchDescription(
             PythonLaunchDescriptionSource([
                 PathJoinSubstitution([pkg_share, 'launch', 'navigation.launch.py'])
@@ -25,9 +25,9 @@ def generate_launch_description():
         )]
     )
 
-    # Delay RViz by 10s so Nav2 is up first
+    # Delay RViz by 20s so Nav2 is up first
     rviz = TimerAction(
-        period=10.0,
+        period=20.0,
         actions=[Node(
             package='rviz2',
             executable='rviz2',
