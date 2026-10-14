@@ -1,6 +1,12 @@
 Panels:
   - Class: rviz_common/Displays
+    Help Height: 0
     Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /Global Options1
+      Splitter Ratio: 0.5
+    Tree Height: 600
   - Class: rviz_common/Views
     Name: Views
   - Class: nav2_rviz_plugins/Navigation 2
@@ -10,8 +16,10 @@ Visualization Manager:
   Class: ""
   Displays:
     - Class: rviz_default_plugins/Grid
-      Name: Grid
       Enabled: true
+      Name: Grid
+      Value: true
+      Expanded: false
 
     - Class: rviz_default_plugins/Map
       Name: Map
@@ -19,6 +27,7 @@ Visualization Manager:
       Topic:
         Value: /map
       Alpha: 0.7
+      Expanded: false
 
     - Class: rviz_default_plugins/LaserScan
       Name: LaserScan
@@ -27,16 +36,19 @@ Visualization Manager:
         Value: /scan_fixed
       Size (m): 0.05
       Color: 255; 0; 0
+      Expanded: false
 
     - Class: rviz_default_plugins/RobotModel
       Name: RobotModel
       Enabled: true
       Description Topic:
         Value: /robot_description
+      Expanded: false
 
     - Class: rviz_default_plugins/TF
       Name: TF
       Enabled: false
+      Expanded: false
 
     - Class: rviz_default_plugins/Path
       Name: GlobalPath
@@ -44,6 +56,7 @@ Visualization Manager:
       Topic:
         Value: /plan
       Color: 0; 255; 0
+      Expanded: false
 
     - Class: rviz_default_plugins/Path
       Name: LocalPath
@@ -51,12 +64,14 @@ Visualization Manager:
       Topic:
         Value: /local_plan
       Color: 0; 0; 255
+      Expanded: false
 
     - Class: rviz_default_plugins/PoseWithCovariance
       Name: AMCL Pose
       Enabled: true
       Topic:
         Value: /amcl_pose
+      Expanded: false
 
   Global Options:
     Fixed Frame: map
@@ -68,3 +83,15 @@ Visualization Manager:
     - Class: nav2_rviz_plugins/GoalTool
 
   Value: true
+
+  Views:
+    Current:
+      Class: rviz_default_plugins/TopDownOrtho
+      Name: Current View
+      Near Clip Distance: 0.01
+      Scale: 60
+      Target Frame: <Fixed Frame>
+      Value: TopDownOrtho (rviz_default_plugins)
+      X: 1.35
+      Y: 1.93
+    Saved: ~
