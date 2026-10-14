@@ -50,7 +50,7 @@ else
     check "controller_server active"    "ros2 lifecycle get /controller_server 2>&1 | grep -q 'active'"
     check "planner_server active"       "ros2 lifecycle get /planner_server 2>&1 | grep -q 'active'"
     check "bt_navigator active"         "ros2 lifecycle get /bt_navigator 2>&1 | grep -q 'active'"
-    check "follow_waypoints available"  "ros2 action info /follow_waypoints 2>&1 | grep -q 'nav2_msgs'"
+    check "follow_waypoints available"  "ros2 action info /follow_waypoints 2>&1 | grep -q 'waypoint_follower'"
 fi
 
 echo ""
