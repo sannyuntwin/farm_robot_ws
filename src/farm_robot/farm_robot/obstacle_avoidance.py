@@ -31,53 +31,45 @@ class ObstacleAvoidance(Node):
         self.get_logger().info('Obstacle avoidance node started.')
 
     def scan_callback(self, scan):
-        # Ignore invalid readings and readings outside sensor range.
-        valid_ranges = [
-            r for r in scan.ranges
-            if math.isfinite(r)
-            and scan.range_min <= r <= scan.range_max
-        ]
-
         command = Twist()
 
-        if not valid_ranges:
-            # Fail safe: don't move if the sensor has no valid readings.
+        # Stop only if the LiDAR message contains no readings at all.
+        if not scan.ranges:
             self.cmd_publisher.publish(command)
-            self.get_logger().warn(
-                'No valid LiDAR readings. Robot stopped.'
-            )
+            self.get_logger().warn('LiDAR scan is empty. Robot stopped.')
             return
 
-        # The scan is arranged from -pi to +pi.
-        # Find the readings in the front 60-degree sector.
+        # Check objects in front, within +/- 30 degrees.
         front_ranges = [
-            r for i, r in enumerate(scan.ranges)
-            if math.isfinite(r)
-            and scan.range_min <= r <= scan.range_max
-            and abs(
-                scan.angle_min + i * scan.angle_increment
-            ) < math.radians(30)
+            distance
+            for i, distance in enumerate(scan.ranges)
+            if (
+                math.isfinite(distance)
+                and scan.range_min <= distance <= scan.range_max
+                and abs(
+                    scan.angle_min + i * scan.angle_increment
+                ) < math.radians(30)
+            )
         ]
 
+        # No detected object in front means the path appears clear.
+        # Infinite LiDAR readings are normal when nothing is detected.
         if not front_ranges:
+            command.linear.x = self.forward_speed
+            command.angular.z = 0.0
             self.cmd_publisher.publish(command)
-            self.get_logger().warn(
-                'No valid front readings. Robot stopped.'
-            )
             return
 
         nearest_obstacle = min(front_ranges)
 
         if nearest_obstacle < self.stop_distance:
-            # Stop forward motion and turn in place.
+            # Turn left until the front path is clear.
             command.linear.x = 0.0
             command.angular.z = self.turn_speed
-
             self.get_logger().info(
-                f'Obstacle at {nearest_obstacle:.2f} m. Turning.'
+                f'Obstacle at {nearest_obstacle:.2f} m. Turning left.'
             )
         else:
-            # Clear path: move forward.
             command.linear.x = self.forward_speed
             command.angular.z = 0.0
 
@@ -93,7 +85,7 @@ def main(args=None):
     except KeyboardInterrupt:
         pass
     finally:
-        # Stop the robot when this node exits.
+        # Ensure the simulated robot receives a stop command on shutdown.
         node.cmd_publisher.publish(Twist())
         node.destroy_node()
         rclpy.shutdown()
