@@ -26,6 +26,10 @@ Visualization Manager:
       Enabled: true
       Topic:
         Value: /map
+        Durability Policy: Transient Local
+        Reliability Policy: Reliable
+        History Policy: Keep Last
+        Depth: 5
       Alpha: 0.7
       Expanded: false
 
