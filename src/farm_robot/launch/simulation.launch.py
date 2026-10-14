@@ -100,7 +100,10 @@ def generate_launch_description():
     odom_tf_broadcaster = Node(
         package='farm_robot',
         executable='odom_tf_broadcaster',
-        output='screen'
+        parameters=[{
+	    'use_sim_time': True,
+	}],
+	 output='screen'
     )
 
     scan_frame_fixer = Node(
