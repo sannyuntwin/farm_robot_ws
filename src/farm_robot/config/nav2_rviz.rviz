@@ -3,11 +3,13 @@ Panels:
     Name: Displays
   - Class: rviz_common/Views
     Name: Views
+  - Class: nav2_rviz_plugins/Nav2Panel
+    Name: Navigation 2
 
 Visualization Manager:
   Class: ""
   Displays:
-    - Class: rviz_common/Grid
+    - Class: rviz_default_plugins/Grid
       Name: Grid
       Enabled: true
 
@@ -35,10 +37,6 @@ Visualization Manager:
     - Class: rviz_default_plugins/TF
       Name: TF
       Enabled: false
-
-    - Class: nav2_rviz_plugins/Nav2Panel
-      Name: Navigation 2
-      Enabled: true
 
     - Class: rviz_default_plugins/Path
       Name: GlobalPath
