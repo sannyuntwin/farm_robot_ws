@@ -96,10 +96,17 @@ def generate_launch_description():
         output='screen'
     )
 
+    scan_frame_fixer = Node(
+        package='farm_robot',
+        executable='scan_frame_fixer',
+        output='screen'
+    )
+
     return LaunchDescription([
         gazebo,
         robot_state_publisher,
         spawn_robot,
         cmd_vel_bridge,
         odom_tf_broadcaster,
+        scan_frame_fixer,
     ])
