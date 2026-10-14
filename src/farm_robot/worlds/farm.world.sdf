@@ -143,7 +143,7 @@
     <!-- Farm obstacles -->
     <model name="rock_1">
       <static>true</static>
-      <pose>2 1 0.25 0 0 0</pose>
+      <pose>-3 3 0.25 0 0 0</pose>
       <link name="link">
         <collision name="collision">
           <geometry>
@@ -164,7 +164,7 @@
 
     <model name="rock_2">
       <static>true</static>
-      <pose>-2 2 0.35 0 0 0</pose>
+      <pose>3 3 0.35 0 0 0</pose>
       <link name="link">
         <collision name="collision">
           <geometry>
@@ -185,7 +185,7 @@
 
     <model name="barrier_1">
       <static>true</static>
-      <pose>2 -2 0.3 0 0 0</pose>
+      <pose>-3 -2 0.3 0 0 0</pose>
       <link name="link">
         <collision name="collision">
           <geometry>
