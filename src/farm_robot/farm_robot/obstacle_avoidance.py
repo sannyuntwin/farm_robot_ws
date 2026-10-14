@@ -10,14 +10,17 @@ class ObstacleAvoidance(Node):
     def __init__(self):
         super().__init__('obstacle_avoidance')
 
-        # Robot movement settings
         self.forward_speed = 0.12
+        self.slow_speed = 0.05
         self.turn_speed = 0.45
-        self.stop_distance = 0.60
 
-        # Crop-row navigation settings
-        self.target_side_distance = 1.0
-        self.centering_gain = 0.8
+        # Stop only when something is very close in front.
+        self.emergency_distance = 0.30
+        self.caution_distance = 0.65
+
+        # Keep a little distance from crop rows.
+        self.target_side_distance = 0.75
+        self.centering_gain = 0.7
 
         self.scan_subscriber = self.create_subscription(
             LaserScan,
@@ -33,22 +36,22 @@ class ObstacleAvoidance(Node):
         )
 
         self.get_logger().info(
-            'Smart crop-row navigation started.'
+            'Crop-row controller started.'
         )
 
-    def get_sector_distance(self, scan, center_deg, width_deg=15):
-        """Return the nearest valid LiDAR distance in a sector."""
+    def get_sector_distance(self, scan, center_deg, width_deg):
         distances = []
 
         for i, distance in enumerate(scan.ranges):
-            angle = scan.angle_min + i * scan.angle_increment
-            angle_deg = math.degrees(angle)
+            angle = math.degrees(
+                scan.angle_min + i * scan.angle_increment
+            )
 
-            angle_difference = (
-                (angle_deg - center_deg + 180) % 360
+            difference = (
+                (angle - center_deg + 180) % 360
             ) - 180
 
-            if abs(angle_difference) <= width_deg:
+            if abs(difference) <= width_deg:
                 if (
                     math.isfinite(distance)
                     and scan.range_min <= distance <= scan.range_max
@@ -64,13 +67,13 @@ class ObstacleAvoidance(Node):
             self.cmd_publisher.publish(command)
             return
 
-        # Detect obstacles in front and on both sides.
-        front = self.get_sector_distance(scan, 0, 25)
+        front = self.get_sector_distance(scan, 0, 20)
         left = self.get_sector_distance(scan, 90, 20)
         right = self.get_sector_distance(scan, -90, 20)
 
-        # Priority 1: Avoid an obstacle directly ahead.
-        if front is not None and front < self.stop_distance:
+        # Emergency: stop forward movement and turn toward
+        # the side with more clearance.
+        if front is not None and front < self.emergency_distance:
             command.linear.x = 0.0
 
             if left is not None and right is not None:
@@ -79,44 +82,52 @@ class ObstacleAvoidance(Node):
                     else -self.turn_speed
                 )
             elif left is not None:
-                command.angular.z = (
-                    -self.turn_speed
-                    if left < self.stop_distance
-                    else self.turn_speed
-                )
-            else:
                 command.angular.z = self.turn_speed
+            else:
+                command.angular.z = -self.turn_speed
 
             self.cmd_publisher.publish(command)
             return
 
-        # Priority 2: Stay centered between two detected crop rows.
-        if left is not None and right is not None:
-            error = left - right
-
-            # Positive angular velocity turns the robot left.
-            command.angular.z = max(
-                -self.turn_speed,
-                min(self.turn_speed, self.centering_gain * error)
-            )
-
-        # If only one side is visible, keep a safe distance from it.
-        elif left is not None:
-            error = left - self.target_side_distance
-            command.angular.z = max(
-                -self.turn_speed,
-                min(self.turn_speed, self.centering_gain * error)
-            )
-
-        elif right is not None:
-            error = self.target_side_distance - right
-            command.angular.z = max(
-                -self.turn_speed,
-                min(self.turn_speed, self.centering_gain * error)
-            )
-
-        # Move forward when the path is clear.
+        # Default: move forward.
         command.linear.x = self.forward_speed
+
+        # Slow down if an obstacle is approaching.
+        if front is not None and front < self.caution_distance:
+            command.linear.x = self.slow_speed
+
+        # Steer away from a nearby side obstacle.
+        if left is not None and right is not None:
+            if right < self.target_side_distance:
+                command.angular.z = self.turn_speed * min(
+                    1.0,
+                    (self.target_side_distance - right) / 0.5
+                )
+            elif left < self.target_side_distance:
+                command.angular.z = -self.turn_speed * min(
+                    1.0,
+                    (self.target_side_distance - left) / 0.5
+                )
+            else:
+                # Center between both sides.
+                error = right - left
+                command.angular.z = max(
+                    -0.25,
+                    min(0.25, self.centering_gain * error)
+                )
+
+        elif right is not None and right < self.target_side_distance:
+            command.angular.z = self.turn_speed * min(
+                1.0,
+                (self.target_side_distance - right) / 0.5
+            )
+
+        elif left is not None and left < self.target_side_distance:
+            command.angular.z = -self.turn_speed * min(
+                1.0,
+                (self.target_side_distance - left) / 0.5
+            )
+
         self.cmd_publisher.publish(command)
 
 
