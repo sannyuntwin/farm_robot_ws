@@ -8,56 +8,51 @@
   <xacro:property name="wheel_radius" value="0.07"/>
   <xacro:property name="wheel_width"  value="0.04"/>
 
-  <!-- Shared materials -->
-  <material name="orange">    <color rgba="0.91 0.42 0.00 1.0"/></material>
-  <material name="dark_gray"> <color rgba="0.18 0.18 0.18 1.0"/></material>
-  <material name="silver">    <color rgba="0.72 0.72 0.72 1.0"/></material>
-  <material name="black">     <color rgba="0.05 0.05 0.05 1.0"/></material>
-  <material name="lidar_blue"><color rgba="0.10 0.45 0.80 1.0"/></material>
-
   <!-- ═══════════════════════════════════════════
        MAIN CHASSIS  (base_link)
        ═══════════════════════════════════════════ -->
   <link name="base_link">
 
-    <!-- Lower hull plate -->
+    <!-- Lower hull plate  dark gray -->
     <visual>
       <origin xyz="0 0 0.05" rpy="0 0 0"/>
-      <geometry><box size="${body_length} ${body_width} 0.06"/></geometry>
-      <material name="dark_gray"/>
+      <geometry><box size="0.40 0.30 0.06"/></geometry>
+      <material name="dark_gray"><color rgba="0.18 0.18 0.18 1.0"/></material>
     </visual>
 
-    <!-- Upper body / payload deck -->
+    <!-- Upper body / payload deck  orange -->
     <visual>
       <origin xyz="0.02 0 0.135" rpy="0 0 0"/>
       <geometry><box size="0.28 0.22 0.05"/></geometry>
-      <material name="orange"/>
+      <material name="orange"><color rgba="0.91 0.42 0.00 1.0"/></material>
     </visual>
 
     <!-- Front bumper bar -->
     <visual>
       <origin xyz="0.21 0 0.05" rpy="0 0 0"/>
       <geometry><box size="0.02 0.34 0.06"/></geometry>
-      <material name="dark_gray"/>
+      <material name="bumper_gray"><color rgba="0.18 0.18 0.18 1.0"/></material>
     </visual>
 
     <!-- Rear bumper bar -->
     <visual>
       <origin xyz="-0.21 0 0.05" rpy="0 0 0"/>
       <geometry><box size="0.02 0.34 0.06"/></geometry>
-      <material name="dark_gray"/>
+      <material name="bumper_gray2"><color rgba="0.18 0.18 0.18 1.0"/></material>
     </visual>
 
-    <!-- Side rails -->
+    <!-- Left side rail  silver -->
     <visual>
       <origin xyz="0 0.155 0.10" rpy="0 0 0"/>
-      <geometry><box size="${body_length - 0.04} 0.01 0.02"/></geometry>
-      <material name="silver"/>
+      <geometry><box size="0.36 0.01 0.02"/></geometry>
+      <material name="silver_l"><color rgba="0.72 0.72 0.72 1.0"/></material>
     </visual>
+
+    <!-- Right side rail  silver -->
     <visual>
       <origin xyz="0 -0.155 0.10" rpy="0 0 0"/>
-      <geometry><box size="${body_length - 0.04} 0.01 0.02"/></geometry>
-      <material name="silver"/>
+      <geometry><box size="0.36 0.01 0.02"/></geometry>
+      <material name="silver_r"><color rgba="0.72 0.72 0.72 1.0"/></material>
     </visual>
 
     <!-- Collision (unchanged) -->
@@ -75,41 +70,31 @@
     </inertial>
   </link>
 
-  <!-- Gazebo body colors -->
-  <gazebo reference="base_link">
-    <visual name="lower_hull">
-      <material>
-        <ambient>0.18 0.18 0.18 1</ambient>
-        <diffuse>0.18 0.18 0.18 1</diffuse>
-      </material>
-    </visual>
-  </gazebo>
-
   <!-- ═══════════════════════════════════════════
        WHEELS  (positions/physics unchanged)
        ═══════════════════════════════════════════ -->
   <xacro:macro name="wheel" params="name x y">
     <link name="${name}">
 
-      <!-- Tyre -->
+      <!-- Tyre  black -->
       <visual>
         <origin xyz="0 0 0" rpy="1.5707963 0 0"/>
-        <geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry>
-        <material name="black"/>
+        <geometry><cylinder radius="${wheel_radius}" length="0.040"/></geometry>
+        <material name="${name}_tyre"><color rgba="0.05 0.05 0.05 1.0"/></material>
       </visual>
 
-      <!-- Hub disc -->
+      <!-- Hub disc  silver -->
       <visual>
         <origin xyz="0 0 0" rpy="1.5707963 0 0"/>
-        <geometry><cylinder radius="0.038" length="${wheel_width + 0.005}"/></geometry>
-        <material name="silver"/>
+        <geometry><cylinder radius="0.038" length="0.045"/></geometry>
+        <material name="${name}_hub"><color rgba="0.72 0.72 0.72 1.0"/></material>
       </visual>
 
-      <!-- Hub centre bolt -->
+      <!-- Hub centre bolt  orange -->
       <visual>
         <origin xyz="0 0 0" rpy="1.5707963 0 0"/>
-        <geometry><cylinder radius="0.010" length="${wheel_width + 0.012}"/></geometry>
-        <material name="orange"/>
+        <geometry><cylinder radius="0.010" length="0.052"/></geometry>
+        <material name="${name}_bolt"><color rgba="0.91 0.42 0.00 1.0"/></material>
       </visual>
 
       <!-- Collision (unchanged) -->
@@ -167,13 +152,13 @@
     <!-- Camera body -->
     <visual>
       <geometry><box size="0.030 0.090 0.030"/></geometry>
-      <material name="dark_gray"/>
+      <material name="cam_body"><color rgba="0.18 0.18 0.18 1.0"/></material>
     </visual>
     <!-- Lens ring -->
     <visual>
       <origin xyz="0.016 0 0" rpy="0 1.5707963 0"/>
       <geometry><cylinder radius="0.011" length="0.008"/></geometry>
-      <material name="black"/>
+      <material name="cam_lens"><color rgba="0.05 0.05 0.05 1.0"/></material>
     </visual>
     <collision><geometry><box size="0.030 0.090 0.030"/></geometry></collision>
     <inertial>
@@ -194,7 +179,7 @@
   <link name="lidar_pole_link">
     <visual>
       <geometry><cylinder radius="0.012" length="0.08"/></geometry>
-      <material name="dark_gray"/>
+      <material name="pole_gray"><color rgba="0.18 0.18 0.18 1.0"/></material>
     </visual>
     <collision><geometry><cylinder radius="0.012" length="0.08"/></geometry></collision>
     <inertial>
@@ -213,16 +198,16 @@
        LIDAR SENSOR  (position unchanged: 0 0 0.22)
        ═══════════════════════════════════════════ -->
   <link name="lidar_link">
-    <!-- Sensor body -->
+    <!-- Sensor body  blue -->
     <visual>
       <geometry><cylinder radius="0.048" length="0.050"/></geometry>
-      <material name="lidar_blue"/>
+      <material name="lidar_blue"><color rgba="0.10 0.45 0.80 1.0"/></material>
     </visual>
-    <!-- Top cap -->
+    <!-- Top cap  dark gray -->
     <visual>
       <origin xyz="0 0 0.030" rpy="0 0 0"/>
       <geometry><cylinder radius="0.030" length="0.010"/></geometry>
-      <material name="dark_gray"/>
+      <material name="lidar_cap"><color rgba="0.18 0.18 0.18 1.0"/></material>
     </visual>
 
     <collision>
