@@ -19,13 +19,15 @@ class CropRowFollower(Node):
 
         self.forward_speed   = 0.5
         self.turn_speed      = 0.60
-        self.centering_gain  = 1.2
+        self.centering_gain  = 0.8   # lowered from 1.2 to reduce oscillation
         self.wall_range      = 1.5   # max distance to count as wall present
         self.turn_duration   = 5.5   # seconds for ~180° at 0.6 rad/s
 
         self.state        = State.FOLLOWING
         self.turn_end     = None
-        self.turn_dir     = 1.0   # +1 = left, −1 = right; flips each row
+        # Fixed CW (-1): north CW drifts +0.133 m east, south CW drifts −0.133 m
+        # west → net zero per pass. Alternating was causing cumulative east drift.
+        self.turn_dir     = -1.0
 
         self._last_log    = {}   # throttle: only log when values change
 
@@ -66,11 +68,10 @@ class CropRowFollower(Node):
             if left_open and right_open:
                 self.get_logger().info(
                     f'[FOLLOW] Row end detected — starting U-turn '
-                    f'({"left" if self.turn_dir * -1.0 > 0 else "right"})'
+                    f'({"left" if self.turn_dir > 0 else "right"})'
                 )
                 self.state    = State.TURNING
                 self.turn_end = self.get_clock().now().nanoseconds / 1e9 + self.turn_duration
-                self.turn_dir *= -1.0
             else:
                 cmd.linear.x = self.forward_speed
 
@@ -81,9 +82,9 @@ class CropRowFollower(Node):
                     error = right - left
                     cmd.angular.z = -self.centering_gain * error
                 elif left is not None:
-                    cmd.angular.z = self.centering_gain * 0.3
+                    cmd.angular.z = -self.centering_gain * 0.3  # steer away from left wall
                 elif right is not None:
-                    cmd.angular.z = -self.centering_gain * 0.3
+                    cmd.angular.z = self.centering_gain * 0.3   # steer away from right wall
 
                 key = (
                     round(cmd.linear.x, 2),
