@@ -1,10 +1,9 @@
 import os
 
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, LaunchConfiguration, PathJoinSubstitution
-from launch.actions import DeclareLaunchArgument
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
@@ -40,8 +39,14 @@ def generate_launch_description():
         value_type=str
     )
 
-    # Start Gazebo Sim
-    gazebo = IncludeLaunchDescription(
+    # Kill any stale Gazebo process before launching
+    kill_gz = ExecuteProcess(
+        cmd=['bash', '-c', 'pkill -9 -f gz_sim 2>/dev/null; pkill -9 -f gz-sim 2>/dev/null; sleep 1'],
+        output='screen'
+    )
+
+    # Start Gazebo Sim (delayed to let kill complete)
+    gazebo = TimerAction(period=1.5, actions=[IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
             PathJoinSubstitution([
                 FindPackageShare('ros_gz_sim'),
@@ -52,7 +57,7 @@ def generate_launch_description():
         launch_arguments={
             'gz_args': ['-r ', world_file]
         }.items()
-    )
+    )])
 
     # Publish robot links and joints
     robot_state_publisher = Node(
@@ -122,6 +127,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         world_arg,
+        kill_gz,
         gazebo,
         robot_state_publisher,
         spawn_robot,
