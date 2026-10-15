@@ -70,8 +70,8 @@ def generate_launch_description():
         }]
     )
 
-    # Spawn the robot into Gazebo
-    spawn_robot = Node(
+    # Spawn the robot into Gazebo (delayed to wait for Gazebo to be ready)
+    spawn_robot = TimerAction(period=5.0, actions=[Node(
         package='ros_gz_sim',
         executable='create',
         arguments=[
@@ -83,7 +83,7 @@ def generate_launch_description():
             '-Y', '1.5708'
         ],
         output='screen'
-    )
+    )])
     
     
     cmd_vel_bridge = Node(
