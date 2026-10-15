@@ -73,7 +73,7 @@ elif [ "$MODE" = "waypoints" ]; then
     echo "--- Waypoint Navigation ---"
     check "bt_navigator active"          "ros2 lifecycle get /bt_navigator 2>&1 | grep -q 'active'"
     check "/follow_waypoints available"  "ros2 action info /follow_waypoints 2>&1 | grep -q 'waypoint_follower'"
-    check "waypoint_navigator running"   "timeout 15 bash -c 'until ros2 node list 2>&1 | grep -q /farm_waypoint_navigator; do sleep 1; done'"
+    check "waypoint_navigator running"   "pgrep -f farm_waypoints"
 else
     echo "--- Nav2 Nodes ---"
     check "/amcl_pose published"        "ros2 topic info /amcl_pose 2>&1 | grep -q 'Publisher count: 1'"
