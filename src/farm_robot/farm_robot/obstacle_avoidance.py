@@ -2,6 +2,7 @@ import math
 
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Twist
 
@@ -26,7 +27,7 @@ class ObstacleAvoidance(Node):
             LaserScan,
             '/scan_fixed',
             self.scan_callback,
-            10
+            qos_profile_sensor_data
         )
 
         self.cmd_publisher = self.create_publisher(
