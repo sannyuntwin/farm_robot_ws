@@ -2,7 +2,7 @@
 source /opt/ros/jazzy/setup.bash
 source ~/ros2/farm_robot_ws/install/setup.bash
 
-MODE=${1:-nav}   # usage: ./test.sh [nav|slam|crop|coverage|log|home]  default: nav
+MODE=${1:-nav}   # usage: ./test.sh [nav|slam|crop|coverage|log|home|dashboard]  default: nav
 
 PASS=0
 FAIL=0
@@ -27,14 +27,14 @@ check "/clock publishing"        "ros2 topic info /clock 2>&1 | grep -q 'Publish
 check "/scan_fixed publishing"   "ros2 topic info /scan_fixed 2>&1 | grep -q 'Publisher count: 1'"
 check "/odom publishing"         "ros2 topic info /odom 2>&1 | grep -q 'Publisher count: 1'"
 check "/joint_states publishing" "ros2 topic info /joint_states 2>&1 | grep -q 'Publisher count: 1'"
-if [ "$MODE" != "crop" ] && [ "$MODE" != "coverage" ] && [ "$MODE" != "log" ] && [ "$MODE" != "home" ]; then
+if [ "$MODE" != "crop" ] && [ "$MODE" != "coverage" ] && [ "$MODE" != "log" ] && [ "$MODE" != "home" ] && [ "$MODE" != "dashboard" ]; then
     check "/map published"       "ros2 topic info /map 2>&1 | grep -q 'Publisher count: 1'"
 fi
 
 echo ""
 
 echo "--- TF Chain ---"
-if [ "$MODE" != "crop" ] && [ "$MODE" != "coverage" ] && [ "$MODE" != "log" ] && [ "$MODE" != "home" ]; then
+if [ "$MODE" != "crop" ] && [ "$MODE" != "coverage" ] && [ "$MODE" != "log" ] && [ "$MODE" != "home" ] && [ "$MODE" != "dashboard" ]; then
     check "map -> odom"          "timeout 10 ros2 run tf2_ros tf2_echo map odom 2>&1 | grep -q 'Translation'"
 fi
 check "odom -> base_link"        "timeout 10 ros2 run tf2_ros tf2_echo odom base_link 2>&1 | grep -q 'Translation'"
@@ -64,6 +64,11 @@ elif [ "$MODE" = "home" ]; then
     check "return_to_home running"    "ros2 node list 2>&1 | grep -q '/return_to_home'"
     check "/return_home subscribed"   "ros2 topic info /return_home 2>&1 | grep -q 'Subscription count: 1'"
     check "/cmd_vel publishing"       "ros2 topic info /cmd_vel 2>&1 | grep -qP 'Publisher count: [1-9]'"
+elif [ "$MODE" = "dashboard" ]; then
+    echo "--- Web Dashboard ---"
+    check "web_dashboard running"     "ros2 node list 2>&1 | grep -q '/web_dashboard'"
+    check "HTTP server responds"      "curl -sf http://localhost:8080/ | grep -q 'Farm Robot'"
+    check "/api/state responds"       "curl -sf http://localhost:8080/api/state | grep -q '\"x\"'"
 else
     echo "--- Nav2 Nodes ---"
     check "/amcl_pose published"        "ros2 topic info /amcl_pose 2>&1 | grep -q 'Publisher count: 1'"

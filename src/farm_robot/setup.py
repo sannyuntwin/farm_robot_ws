@@ -52,6 +52,7 @@ setup(
             'field_coverage = farm_robot.field_coverage:main',
             'data_logger = farm_robot.data_logger:main',
             'return_to_home = farm_robot.return_to_home:main',
+            'web_dashboard = farm_robot.web_dashboard:main',
         ],
     },
 )
