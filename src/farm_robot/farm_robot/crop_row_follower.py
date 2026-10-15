@@ -17,11 +17,11 @@ class CropRowFollower(Node):
     def __init__(self):
         super().__init__('crop_row_follower')
 
-        self.forward_speed   = 0.15
-        self.turn_speed      = 0.50
+        self.forward_speed   = 0.5
+        self.turn_speed      = 0.60
         self.centering_gain  = 1.2
         self.wall_range      = 1.5   # max distance to count as wall present
-        self.turn_duration   = 6.5   # seconds for ~180° at 0.5 rad/s
+        self.turn_duration   = 5.5   # seconds for ~180° at 0.6 rad/s
 
         self.state        = State.FOLLOWING
         self.turn_end     = None
@@ -31,7 +31,13 @@ class CropRowFollower(Node):
             LaserScan, '/scan_fixed', self._scan_cb, qos_profile_sensor_data)
         self._pub = self.create_publisher(Twist, '/cmd_vel', 10)
 
+        self._last_cmd = Twist()
+        self.create_timer(0.1, self._republish)
+
         self.get_logger().info('Crop row follower started.')
+
+    def _republish(self):
+        self._pub.publish(self._last_cmd)
 
     def _sector_min(self, scan, center_deg, half_width_deg):
         dists = []
@@ -79,6 +85,7 @@ class CropRowFollower(Node):
                 self.get_logger().info('U-turn complete — resuming row follow.')
                 self.state = State.FOLLOWING
 
+        self._last_cmd = cmd
         self._pub.publish(cmd)
 
 
@@ -90,7 +97,6 @@ def main(args=None):
     except KeyboardInterrupt:
         pass
     finally:
-        node.cmd_publisher = node._pub
         node._pub.publish(Twist())
         node.destroy_node()
         rclpy.shutdown()
