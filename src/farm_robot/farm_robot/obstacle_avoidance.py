@@ -16,8 +16,8 @@ class ObstacleAvoidance(Node):
         self.turn_speed = 1.2
 
         # Stop only when something is very close in front.
-        self.emergency_distance = 0.45
-        self.caution_distance = 1.00
+        self.emergency_distance = 0.7
+        self.caution_distance = 1.20
 
         # Keep a little distance from crop rows.
         self.target_side_distance = 0.85
@@ -79,7 +79,7 @@ class ObstacleAvoidance(Node):
         # Emergency: stop forward movement and turn toward
         # the side with more clearance.
         if front is not None and front < self.emergency_distance:
-            command.linear.x = 0.0
+            command.linear.x = -0.2  # reverse to escape
 
             if left is not None and right is not None:
                 command.angular.z = (
