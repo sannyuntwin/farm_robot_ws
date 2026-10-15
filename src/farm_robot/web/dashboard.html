@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Farm Robot Dashboard</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600&display=swap">
+  <style>
+    /* Layout: sticky header + two-column sidebar/map */
+    :root {
+      --bg:      #0b1120;
+      --surface: #131f35;
+      --card:    #1a2942;
+      --border:  #253550;
+      --text:    #e2e8f0;
+      --muted:   #6b82a0;
+      --accent:  #f97316;
+      --green:   #22c55e;
+      --red:     #ef4444;
+      --yellow:  #eab308;
+      --blue:    #60a5fa;
+      --ff-ui:   'Inter', system-ui, sans-serif;
+      --ff-data: 'JetBrains Mono', monospace;
+      color-scheme: dark;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f1f5f9; --surface: #fff; --card: #f8fafc;
+        --border: #cbd5e1; --text: #1e293b; --muted: #64748b;
+        color-scheme: light;
+      }
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: var(--ff-ui); font-size: 14px;
+      display: flex; flex-direction: column;
+    }
+    /* Header */
+    .hdr {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 10px 20px; display: flex; align-items: center; gap: 16px;
+      flex-wrap: wrap; flex-shrink: 0;
+    }
+    .hdr-title {
+      font-size: 15px; font-weight: 600; color: var(--accent);
+      display: flex; align-items: center; gap: 8px; white-space: nowrap;
+    }
+    .conn-group { display:flex; align-items:center; gap:8px; margin-left:auto; flex-wrap:wrap; }
+    .dot { width:8px; height:8px; border-radius:50%; background:var(--red); flex-shrink:0; }
+    .dot.live { background:var(--green); animation:blink 2s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.35} }
+    .conn-lbl { font-size:12px; color:var(--muted); font-family:var(--ff-data); }
+    .ws-in {
+      background:var(--bg); border:1px solid var(--border); color:var(--text);
+      padding:5px 10px; border-radius:6px; font-size:12px; font-family:var(--ff-data); width:200px;
+    }
+    .btn { padding:5px 14px; border-radius:6px; border:none; font-size:12px; font-weight:600; cursor:pointer; }
+    .btn-conn { background:var(--green); color:#000; }
+    .btn-disc { background:var(--red);   color:#fff; }
+    /* Layout */
+    .layout { display:grid; grid-template-columns:270px 1fr; flex:1; min-height:0; overflow:hidden; }
+    /* Sidebar */
+    .sidebar {
+      background:var(--surface); border-right:1px solid var(--border);
+      display:flex; flex-direction:column; overflow-y:auto;
+    }
+    .sec { border-bottom:1px solid var(--border); padding:14px 16px; }
+    .sec-lbl { font-size:10px; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:10px; }
+    .badge {
+      display:flex; align-items:center; justify-content:center; padding:10px 14px;
+      border-radius:8px; border:2px solid var(--muted); background:transparent;
+      font-family:var(--ff-data); font-size:15px; font-weight:700; color:var(--muted);
+      letter-spacing:.08em; transition:all .2s;
+    }
+    .badge.follow { border-color:var(--green);  background:rgba(34,197,94,.1);  color:var(--green);  }
+    .badge.turn   { border-color:var(--accent); background:rgba(249,115,22,.1); color:var(--accent); }
+    .badge.stop   { border-color:var(--red);    background:rgba(239,68,68,.1);  color:var(--red);    }
+    .dist { margin-bottom:10px; }
+    .dist:last-child { margin-bottom:0; }
+    .dist-hdr { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px; }
+    .dist-name { font-size:12px; color:var(--muted); }
+    .dist-val  { font-family:var(--ff-data); font-size:13px; font-weight:600; font-variant-numeric:tabular-nums; }
+    .track { height:6px; background:var(--bg); border-radius:3px; overflow:hidden; }
+    .fill  { height:100%; border-radius:3px; background:var(--blue); transition:width .12s, background .12s; }
+    .fill.warn   { background:var(--yellow); }
+    .fill.danger { background:var(--red); }
+    .vel-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .vel-card { background:var(--bg); border-radius:8px; padding:10px 12px; text-align:center; }
+    .vel-num  { font-family:var(--ff-data); font-size:20px; font-weight:700; font-variant-numeric:tabular-nums; line-height:1; margin-bottom:4px; }
+    .vel-unit { font-size:10px; color:var(--muted); }
+    .odom-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; }
+    .odom-item { background:var(--bg); border-radius:6px; padding:7px; text-align:center; }
+    .odom-axis { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; }
+    .odom-val  { font-family:var(--ff-data); font-size:13px; font-weight:600; font-variant-numeric:tabular-nums; }
+    /* Map */
+    .map-panel { display:flex; flex-direction:column; background:var(--bg); min-width:0; }
+    .map-hdr {
+      padding:10px 16px; font-size:11px; color:var(--muted);
+      border-bottom:1px solid var(--border);
+      display:flex; justify-content:space-between; align-items:center;
+      background:var(--surface); flex-shrink:0;
+    }
+    .map-wrap { flex:1; display:flex; align-items:center; justify-content:center; padding:16px; min-height:0; }
+    #cv { display:block; max-width:100%; max-height:100%; border-radius:8px; }
+    .legend { display:flex; gap:16px; flex-wrap:wrap; padding:0 16px 12px; flex-shrink:0; }
+    .leg-item { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--muted); }
+    .leg-sw   { width:10px; height:10px; border-radius:2px; flex-shrink:0; }
+    @media (max-width:680px) {
+      .layout { grid-template-columns:1fr; }
+      .sidebar { border-right:none; border-bottom:1px solid var(--border); }
+      .ws-in { width:130px; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-title">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="7" width="20" height="14" rx="2"/>
+      <path d="M16 3h-8l-2 4h12z"/>
+      <circle cx="9" cy="14" r="1.2" fill="currentColor" stroke="none"/>
+      <circle cx="15" cy="14" r="1.2" fill="currentColor" stroke="none"/>
+    </svg>
+    Farm Robot Dashboard
+  </div>
+  <div class="conn-group">
+    <div class="dot" id="dot"></div>
+    <span class="conn-lbl" id="conn-lbl">Disconnected</span>
+    <input class="ws-in" id="ws-url" type="text" value="ws://localhost:9090">
+    <button class="btn btn-conn" id="conn-btn" onclick="toggleConn()">Connect</button>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sec">
+      <div class="sec-lbl">State</div>
+      <div class="badge" id="badge">IDLE</div>
+    </div>
+    <div class="sec">
+      <div class="sec-lbl">Distances</div>
+      <div class="dist">
+        <div class="dist-hdr"><span class="dist-name">Front</span><span class="dist-val" id="dF">---</span></div>
+        <div class="track"><div class="fill" id="bF" style="width:0"></div></div>
+      </div>
+      <div class="dist">
+        <div class="dist-hdr"><span class="dist-name">Left</span><span class="dist-val" id="dL">---</span></div>
+        <div class="track"><div class="fill" id="bL" style="width:0"></div></div>
+      </div>
+      <div class="dist">
+        <div class="dist-hdr"><span class="dist-name">Right</span><span class="dist-val" id="dR">---</span></div>
+        <div class="track"><div class="fill" id="bR" style="width:0"></div></div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-lbl">Velocity</div>
+      <div class="vel-grid">
+        <div class="vel-card"><div class="vel-num" id="vLx">0.00</div><div class="vel-unit">linear m/s</div></div>
+        <div class="vel-card"><div class="vel-num" id="vWz">0.00</div><div class="vel-unit">angular rad/s</div></div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-lbl">Odometry</div>
+      <div class="odom-grid">
+        <div class="odom-item"><div class="odom-axis">X (m)</div><div class="odom-val" id="ox">1.00</div></div>
+        <div class="odom-item"><div class="odom-axis">Y (m)</div><div class="odom-val" id="oy">−3.50</div></div>
+        <div class="odom-item"><div class="odom-axis">Yaw °</div><div class="odom-val" id="oyaw">90</div></div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="map-panel">
+    <div class="map-hdr">
+      <span>Field Map — top-down, 10 × 10 m (north up)</span>
+      <span id="scan-age" style="font-family:'JetBrains Mono',monospace">No scan</span>
+    </div>
+    <div class="map-wrap">
+      <canvas id="cv" width="460" height="460"></canvas>
+    </div>
+    <div class="legend">
+      <div class="leg-item"><div class="leg-sw" style="background:#22c55e"></div>Crop row</div>
+      <div class="leg-item"><div class="leg-sw" style="background:#a87c00"></div>Headland</div>
+      <div class="leg-item"><div class="leg-sw" style="background:#f97316"></div>Robot</div>
+      <div class="leg-item"><div class="leg-sw" style="background:rgba(96,165,250,.6)"></div>LiDAR</div>
+      <div class="leg-item"><div class="leg-sw" style="background:#2f5c2f"></div>Wall</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/roslib@1.3.0/build/roslib.min.js"></script>
+<script>
+const S = 44, OX = 230, OY = 230;
+const wx = x =>  x * S + OX;
+const wy = y => -y * S + OY;
+
+let ros  = null;
+let pose = { x: 1.0, y: -3.5, yaw: Math.PI / 2 };
+let scan = null, vel = { lx: 0, wz: 0 };
+let dF = null, dL = null, dR = null, scanTs = null;
+
+function toggleConn() {
+  if (ros && ros.isConnected) { ros.close(); return; }
+  const url = document.getElementById('ws-url').value.trim();
+  ros = new ROSLIB.Ros({ url });
+  ros.on('connection', () => { setConn(true); subscribe(); });
+  ros.on('error',      () =>   setConn(false, 'Error — is rosbridge running?'));
+  ros.on('close',      () => { setConn(false); ros = null; });
+}
+
+function setConn(on, msg) {
+  document.getElementById('dot').className       = 'dot' + (on ? ' live' : '');
+  document.getElementById('conn-lbl').textContent = on ? 'Connected' : (msg || 'Disconnected');
+  const b = document.getElementById('conn-btn');
+  b.textContent = on ? 'Disconnect' : 'Connect';
+  b.className   = 'btn ' + (on ? 'btn-disc' : 'btn-conn');
+}
+
+function subscribe() {
+  sub('/scan_fixed', 'sensor_msgs/LaserScan', 150, msg => {
+    scan = msg;
+    dF = secMin(msg, 0, 25); dL = secMin(msg, 90, 20); dR = secMin(msg, -90, 20);
+    scanTs = Date.now(); renderDists();
+  });
+  sub('/cmd_vel', 'geometry_msgs/Twist', 150, msg => {
+    vel.lx = msg.linear.x; vel.wz = msg.angular.z;
+    renderVel(); renderBadge();
+  });
+  sub('/odom', 'nav_msgs/Odometry', 150, msg => {
+    pose.x = msg.pose.pose.position.x;
+    pose.y = msg.pose.pose.position.y;
+    const q = msg.pose.pose.orientation;
+    pose.yaw = Math.atan2(2*(q.w*q.z + q.x*q.y), 1 - 2*(q.y*q.y + q.z*q.z));
+    renderOdom();
+  });
+}
+
+function sub(name, type, throttle, cb) {
+  new ROSLIB.Topic({ ros, name, messageType: type, throttle_rate: throttle }).subscribe(cb);
+}
+
+function secMin(s, cDeg, hw) {
+  let mn = Infinity;
+  for (let i = 0; i < s.ranges.length; i++) {
+    const ang = (s.angle_min + i * s.angle_increment) * 180 / Math.PI;
+    if (Math.abs(((ang - cDeg + 180) % 360) - 180) <= hw) {
+      const d = s.ranges[i];
+      if (isFinite(d) && d >= s.range_min && d <= s.range_max && d < mn) mn = d;
+    }
+  }
+  return mn === Infinity ? null : mn;
+}
+
+const MAX_D = 3.5;
+function setBar(fId, vId, v) {
+  const pct = v == null ? 0 : Math.min(100, v / MAX_D * 100);
+  const cls = v == null ? '' : v < 0.30 ? 'danger' : v < 0.80 ? 'warn' : '';
+  const el = document.getElementById(fId);
+  el.style.width = pct + '%'; el.className = 'fill ' + cls;
+  const ve = document.getElementById(vId);
+  ve.textContent = v == null ? '---' : v.toFixed(2) + ' m';
+  ve.style.color = cls==='danger' ? 'var(--red)' : cls==='warn' ? 'var(--yellow)' : 'var(--text)';
+}
+function renderDists() { setBar('bF','dF',dF); setBar('bL','dL',dL); setBar('bR','dR',dR); }
+function renderVel() {
+  document.getElementById('vLx').textContent = vel.lx.toFixed(2);
+  document.getElementById('vWz').textContent = vel.wz.toFixed(2);
+}
+function renderBadge() {
+  const b = document.getElementById('badge');
+  let txt, cls;
+  if (Math.abs(vel.wz) > 0.4 && Math.abs(vel.lx) < 0.05) { txt='TURNING';   cls='badge turn';   }
+  else if (vel.lx > 0.1)                                   { txt='FOLLOWING'; cls='badge follow'; }
+  else if (Math.abs(vel.lx)<.01 && Math.abs(vel.wz)<.01)  { txt='STOPPED';   cls='badge stop';   }
+  else                                                       { txt='ADJUSTING'; cls='badge follow'; }
+  b.textContent = txt; b.className = cls;
+}
+function renderOdom() {
+  document.getElementById('ox').textContent   = pose.x.toFixed(2);
+  document.getElementById('oy').textContent   = pose.y.toFixed(2);
+  document.getElementById('oyaw').textContent = (pose.yaw * 180 / Math.PI).toFixed(1);
+}
+
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+
+function drawMap() {
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.fillStyle = '#1f1208'; ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)'; ctx.lineWidth = 1;
+  for (let i=-5; i<=5; i++) {
+    ctx.beginPath(); ctx.moveTo(wx(i),wy(-5)); ctx.lineTo(wx(i),wy(5)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(wx(-5),wy(i)); ctx.lineTo(wx(5),wy(i)); ctx.stroke();
+  }
+  ctx.strokeStyle = '#2f5c2f'; ctx.lineWidth = 4;
+  ctx.strokeRect(wx(-5)+2, wy(5)+2, 10*S-4, 10*S-4);
+  ctx.strokeStyle = '#a87c00'; ctx.lineWidth = 1.5; ctx.setLineDash([8,5]);
+  ctx.beginPath(); ctx.moveTo(wx(-5),wy(3.65));  ctx.lineTo(wx(5),wy(3.65));  ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(wx(-5),wy(-3.65)); ctx.lineTo(wx(5),wy(-3.65)); ctx.stroke();
+  ctx.setLineDash([]);
+  [[-2,'A'],[0,'B'],[2,'C'],[4,'D']].forEach(([rx,lbl]) => {
+    const cx=wx(rx), y0=wy(3.5), rh=7*S;
+    ctx.fillStyle='#3d2008'; ctx.fillRect(cx-0.10*S, y0, 0.20*S, rh);
+    ctx.fillStyle='#0e3d16'; ctx.fillRect(cx-0.175*S, y0, 0.35*S, rh);
+    ctx.strokeStyle='#22c55e'; ctx.lineWidth=1; ctx.strokeRect(cx-0.175*S, y0, 0.35*S, rh);
+    ctx.fillStyle='#22c55e'; ctx.font='10px Inter,sans-serif'; ctx.textAlign='center';
+    ctx.fillText('Row '+lbl, cx, wy(3.5)-5);
+  });
+  if (scan) {
+    ctx.fillStyle = 'rgba(96,165,250,0.55)';
+    const yaw = pose.yaw;
+    for (let i=0; i<scan.ranges.length; i+=3) {
+      const d = scan.ranges[i];
+      if (!isFinite(d)||d<scan.range_min||d>scan.range_max) continue;
+      const a = scan.angle_min + i*scan.angle_increment + yaw;
+      ctx.beginPath();
+      ctx.arc(wx(pose.x+d*Math.cos(a)), wy(pose.y+d*Math.sin(a)), 1.8, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+  const rx=wx(pose.x), ry=wy(pose.y);
+  ctx.save(); ctx.translate(rx,ry); ctx.rotate(-pose.yaw);
+  ctx.fillStyle='#f97316'; ctx.fillRect(-9,-6,18,12);
+  ctx.fillStyle='#1e293b';
+  ctx.fillRect(-8,-9,5,3); ctx.fillRect(-8,6,5,3);
+  ctx.fillRect(3,-9,5,3);  ctx.fillRect(3,6,5,3);
+  ctx.fillStyle='#fff'; ctx.beginPath(); ctx.moveTo(13,0); ctx.lineTo(7,-4); ctx.lineTo(7,4); ctx.closePath(); ctx.fill();
+  ctx.restore();
+  ctx.fillStyle='rgba(249,115,22,.9)'; ctx.font='10px "JetBrains Mono",monospace'; ctx.textAlign='left';
+  ctx.fillText(`(${pose.x.toFixed(1)}, ${pose.y.toFixed(1)})`, rx+14, ry-8);
+  document.getElementById('scan-age').textContent =
+    scanTs ? ((Date.now()-scanTs)/1000).toFixed(1)+'s ago' : 'No scan';
+}
+
+function loop() { drawMap(); requestAnimationFrame(loop); }
+loop();
+</script>
+</body>
+</html>
