@@ -11,9 +11,9 @@ class ObstacleAvoidance(Node):
     def __init__(self):
         super().__init__('obstacle_avoidance')
 
-        self.forward_speed = 0.12
-        self.slow_speed = 0.05
-        self.turn_speed = 0.45
+        self.forward_speed = 0.35
+        self.slow_speed = 0.15
+        self.turn_speed = 0.7
 
         # Stop only when something is very close in front.
         self.emergency_distance = 0.45
