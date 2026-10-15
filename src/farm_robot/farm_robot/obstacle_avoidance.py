@@ -36,8 +36,11 @@ class ObstacleAvoidance(Node):
             10
         )
 
+        self._last_cmd = Twist()
+        self.create_timer(0.1, self._republish_cmd)
+
         self.get_logger().info(
-            'Crop-row controller started.'
+            'Obstacle avoidance started.'
         )
 
     def get_sector_distance(self, scan, center_deg, width_deg):
@@ -65,6 +68,7 @@ class ObstacleAvoidance(Node):
         command = Twist()
 
         if not scan.ranges:
+            self._last_cmd = command
             self.cmd_publisher.publish(command)
             return
 
@@ -87,6 +91,7 @@ class ObstacleAvoidance(Node):
             else:
                 command.angular.z = -self.turn_speed
 
+            self._last_cmd = command
             self.cmd_publisher.publish(command)
             return
 
@@ -129,7 +134,11 @@ class ObstacleAvoidance(Node):
                 (self.target_side_distance - left) / 0.5
             )
 
+        self._last_cmd = command
         self.cmd_publisher.publish(command)
+
+    def _republish_cmd(self):
+        self.cmd_publisher.publish(self._last_cmd)
 
 
 def main(args=None):
