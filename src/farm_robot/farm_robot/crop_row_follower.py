@@ -54,12 +54,18 @@ class CropRowFollower(Node):
         left  = self._sector_min(scan,  90, 20)
         right = self._sector_min(scan, -90, 20)
 
+        def fmt(v):
+            return f'{v:.2f}m' if v is not None else ' --- '
+
         if self.state == State.FOLLOWING:
             left_open  = left  is None or left  > self.wall_range
             right_open = right is None or right > self.wall_range
 
             if left_open and right_open:
-                self.get_logger().info('Row end detected — starting U-turn.')
+                self.get_logger().info(
+                    f'[FOLLOW] Row end detected — starting U-turn '
+                    f'({"left" if self.turn_dir * -1.0 > 0 else "right"})'
+                )
                 self.state    = State.TURNING
                 self.turn_end = self.get_clock().now().nanoseconds / 1e9 + self.turn_duration
                 self.turn_dir *= -1.0
@@ -77,12 +83,22 @@ class CropRowFollower(Node):
                 elif right is not None:
                     cmd.angular.z = -self.centering_gain * 0.3
 
+                self.get_logger().info(
+                    f'[FOLLOW] front={fmt(front)}  left={fmt(left)}  right={fmt(right)}  '
+                    f'vx={cmd.linear.x:.2f}  wz={cmd.angular.z:.2f}'
+                )
+
         elif self.state == State.TURNING:
-            if self.get_clock().now().nanoseconds / 1e9 < self.turn_end:
+            remaining = self.turn_end - self.get_clock().now().nanoseconds / 1e9
+            if remaining > 0:
                 cmd.angular.z = self.turn_speed * self.turn_dir
                 cmd.linear.x  = 0.04
+                self.get_logger().info(
+                    f'[TURN ] dir={"left" if self.turn_dir > 0 else "right"}  '
+                    f'remaining={remaining:.1f}s'
+                )
             else:
-                self.get_logger().info('U-turn complete — resuming row follow.')
+                self.get_logger().info('[TURN ] U-turn complete — resuming row follow.')
                 self.state = State.FOLLOWING
 
         self._last_cmd = cmd
