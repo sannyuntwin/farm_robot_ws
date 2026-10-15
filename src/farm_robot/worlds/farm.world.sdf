@@ -201,56 +201,73 @@
     </model>
 
     
-    <!-- Crop row 1 -->
-    <model name="crop_row_1">
+    <!-- Crop rows: two-tone (brown stem + wider green canopy) -->
+
+    <model name="crop_row_1_stem">
       <static>true</static>
-      <pose>-2 0 0.25 0 0 0</pose>
+      <pose>-2 0 0.10 0 0 0</pose>
       <link name="crop_link">
-        <collision name="collision">
-          <geometry><box><size>0.3 5.0 0.5</size></box></geometry>
-        </collision>
+        <collision name="collision"><geometry><box><size>0.20 5.0 0.20</size></box></geometry></collision>
         <visual name="visual">
-          <geometry><box><size>0.3 5.0 0.5</size></box></geometry>
-          <material>
-            <ambient>0.1 0.55 0.1 1</ambient>
-            <diffuse>0.1 0.55 0.1 1</diffuse>
-          </material>
+          <geometry><box><size>0.20 5.0 0.20</size></box></geometry>
+          <material><ambient>0.28 0.18 0.08 1</ambient><diffuse>0.30 0.20 0.10 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="crop_row_1_canopy">
+      <static>true</static>
+      <pose>-2 0 0.35 0 0 0</pose>
+      <link name="crop_link">
+        <collision name="collision"><geometry><box><size>0.35 5.0 0.30</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.35 5.0 0.30</size></box></geometry>
+          <material><ambient>0.10 0.52 0.10 1</ambient><diffuse>0.12 0.62 0.12 1</diffuse></material>
         </visual>
       </link>
     </model>
 
-    <!-- Crop row 2 -->
-    <model name="crop_row_2">
+    <model name="crop_row_2_stem">
       <static>true</static>
-      <pose>0 0 0.25 0 0 0</pose>
+      <pose>0 0 0.10 0 0 0</pose>
       <link name="crop_link">
-        <collision name="collision">
-          <geometry><box><size>0.3 5.0 0.5</size></box></geometry>
-        </collision>
+        <collision name="collision"><geometry><box><size>0.20 5.0 0.20</size></box></geometry></collision>
         <visual name="visual">
-          <geometry><box><size>0.3 5.0 0.5</size></box></geometry>
-          <material>
-            <ambient>0.1 0.55 0.1 1</ambient>
-            <diffuse>0.1 0.55 0.1 1</diffuse>
-          </material>
+          <geometry><box><size>0.20 5.0 0.20</size></box></geometry>
+          <material><ambient>0.28 0.18 0.08 1</ambient><diffuse>0.30 0.20 0.10 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="crop_row_2_canopy">
+      <static>true</static>
+      <pose>0 0 0.35 0 0 0</pose>
+      <link name="crop_link">
+        <collision name="collision"><geometry><box><size>0.35 5.0 0.30</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.35 5.0 0.30</size></box></geometry>
+          <material><ambient>0.10 0.52 0.10 1</ambient><diffuse>0.12 0.62 0.12 1</diffuse></material>
         </visual>
       </link>
     </model>
 
-    <!-- Crop row 3 -->
-    <model name="crop_row_3">
+    <model name="crop_row_3_stem">
       <static>true</static>
-      <pose>2 0 0.25 0 0 0</pose>
+      <pose>2 0 0.10 0 0 0</pose>
       <link name="crop_link">
-        <collision name="collision">
-          <geometry><box><size>0.3 5.0 0.5</size></box></geometry>
-        </collision>
+        <collision name="collision"><geometry><box><size>0.20 5.0 0.20</size></box></geometry></collision>
         <visual name="visual">
-          <geometry><box><size>0.3 5.0 0.5</size></box></geometry>
-          <material>
-            <ambient>0.1 0.55 0.1 1</ambient>
-            <diffuse>0.1 0.55 0.1 1</diffuse>
-          </material>
+          <geometry><box><size>0.20 5.0 0.20</size></box></geometry>
+          <material><ambient>0.28 0.18 0.08 1</ambient><diffuse>0.30 0.20 0.10 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="crop_row_3_canopy">
+      <static>true</static>
+      <pose>2 0 0.35 0 0 0</pose>
+      <link name="crop_link">
+        <collision name="collision"><geometry><box><size>0.35 5.0 0.30</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.35 5.0 0.30</size></box></geometry>
+          <material><ambient>0.10 0.52 0.10 1</ambient><diffuse>0.12 0.62 0.12 1</diffuse></material>
         </visual>
       </link>
     </model>

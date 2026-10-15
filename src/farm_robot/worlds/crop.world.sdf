@@ -1,0 +1,247 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+  <world name="crop_world">
+
+    <!-- Physics -->
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <!-- Simulation systems -->
+    <plugin filename="gz-sim-physics-system"
+            name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system"
+            name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system"
+            name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system"
+            name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+
+    <!-- Lighting -->
+    <light name="sun" type="directional">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <!-- Ground (sandy soil) -->
+    <model name="ground">
+      <static>true</static>
+      <link name="ground_link">
+        <collision name="collision">
+          <geometry><plane><normal>0 0 1</normal><size>50 50</size></plane></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><plane><normal>0 0 1</normal><size>50 50</size></plane></geometry>
+          <material>
+            <ambient>0.35 0.25 0.12 1</ambient>
+            <diffuse>0.35 0.25 0.12 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Perimeter walls 10 m x 10 m -->
+    <model name="north_wall">
+      <static>true</static>
+      <pose>0 5 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>10 0.2 1.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>10 0.2 1.0</size></box></geometry>
+          <material><ambient>0.2 0.5 0.2 1</ambient><diffuse>0.2 0.5 0.2 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="south_wall">
+      <static>true</static>
+      <pose>0 -5 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>10 0.2 1.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>10 0.2 1.0</size></box></geometry>
+          <material><ambient>0.2 0.5 0.2 1</ambient><diffuse>0.2 0.5 0.2 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="east_wall">
+      <static>true</static>
+      <pose>5 0 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.2 10 1.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.2 10 1.0</size></box></geometry>
+          <material><ambient>0.2 0.5 0.2 1</ambient><diffuse>0.2 0.5 0.2 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="west_wall">
+      <static>true</static>
+      <pose>-5 0 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.2 10 1.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.2 10 1.0</size></box></geometry>
+          <material><ambient>0.2 0.5 0.2 1</ambient><diffuse>0.2 0.5 0.2 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!--
+      4 crop rows running North-South (along Y axis)
+      Each row = brown soil base (stem) + wider green canopy on top
+      Positions: x = -2, 0, 2, 4  |  Row length: 7 m (y = -3.5 to +3.5)
+      Aisle width: 1.75 m  |  Robot spawn: x=1.0 (aisle 2, between row B and C)
+
+      IMPORTANT: collision is on the canopy layer (wider box = 0.35 m),
+      so wall_range detection = ~0.825 m from aisle center, well within 1.5 m threshold.
+    -->
+
+    <!-- Row A  (x = -2) -->
+    <model name="row_A_stem">
+      <static>true</static>
+      <pose>-2 0 0.10 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.20 7.0 0.20</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.20 7.0 0.20</size></box></geometry>
+          <material><ambient>0.28 0.18 0.08 1</ambient><diffuse>0.30 0.20 0.10 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="row_A_canopy">
+      <static>true</static>
+      <pose>-2 0 0.35 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.35 7.0 0.30</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.35 7.0 0.30</size></box></geometry>
+          <material><ambient>0.10 0.52 0.10 1</ambient><diffuse>0.12 0.62 0.12 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Row B  (x = 0) -->
+    <model name="row_B_stem">
+      <static>true</static>
+      <pose>0 0 0.10 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.20 7.0 0.20</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.20 7.0 0.20</size></box></geometry>
+          <material><ambient>0.28 0.18 0.08 1</ambient><diffuse>0.30 0.20 0.10 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="row_B_canopy">
+      <static>true</static>
+      <pose>0 0 0.35 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.35 7.0 0.30</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.35 7.0 0.30</size></box></geometry>
+          <material><ambient>0.10 0.52 0.10 1</ambient><diffuse>0.12 0.62 0.12 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Row C  (x = 2) -->
+    <model name="row_C_stem">
+      <static>true</static>
+      <pose>2 0 0.10 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.20 7.0 0.20</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.20 7.0 0.20</size></box></geometry>
+          <material><ambient>0.28 0.18 0.08 1</ambient><diffuse>0.30 0.20 0.10 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="row_C_canopy">
+      <static>true</static>
+      <pose>2 0 0.35 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.35 7.0 0.30</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.35 7.0 0.30</size></box></geometry>
+          <material><ambient>0.10 0.52 0.10 1</ambient><diffuse>0.12 0.62 0.12 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Row D  (x = 4) -->
+    <model name="row_D_stem">
+      <static>true</static>
+      <pose>4 0 0.10 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.20 7.0 0.20</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.20 7.0 0.20</size></box></geometry>
+          <material><ambient>0.28 0.18 0.08 1</ambient><diffuse>0.30 0.20 0.10 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="row_D_canopy">
+      <static>true</static>
+      <pose>4 0 0.35 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.35 7.0 0.30</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.35 7.0 0.30</size></box></geometry>
+          <material><ambient>0.10 0.52 0.10 1</ambient><diffuse>0.12 0.62 0.12 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!--
+      Headland turn markers: Fuel Construction Cones placed in the headland area
+      at the WEST side of the field (x = -4.5), well outside the aisles.
+      Visual only — not in the robot's navigation path.
+    -->
+    <include>
+      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Construction Cone</uri>
+      <name>headland_cone_NW</name>
+      <pose>-4.5 3.8 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Construction Cone</uri>
+      <name>headland_cone_SW</name>
+      <pose>-4.5 -3.8 0 0 0 0</pose>
+    </include>
+
+    <!-- Yellow headland line on the ground (too flat for LiDAR, visual only) -->
+    <model name="headland_north">
+      <static>true</static>
+      <pose>0 3.65 0.025 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>10 0.10 0.05</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>10 0.10 0.05</size></box></geometry>
+          <material><ambient>0.85 0.75 0.0 1</ambient><diffuse>0.85 0.75 0.0 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="headland_south">
+      <static>true</static>
+      <pose>0 -3.65 0.025 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>10 0.10 0.05</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>10 0.10 0.05</size></box></geometry>
+          <material><ambient>0.85 0.75 0.0 1</ambient><diffuse>0.85 0.75 0.0 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>

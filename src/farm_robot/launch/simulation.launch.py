@@ -3,7 +3,8 @@ import os
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import Command, PathJoinSubstitution
+from launch.substitutions import Command, LaunchConfiguration, PathJoinSubstitution
+from launch.actions import DeclareLaunchArgument
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
@@ -13,6 +14,12 @@ def generate_launch_description():
     # Find the installed farm_robot package
     pkg_share = FindPackageShare('farm_robot')
 
+    world_arg = DeclareLaunchArgument(
+        'world',
+        default_value='farm',
+        description='World to load: farm | obstacle | crop'
+    )
+
     # Robot description file
     robot_description_file = PathJoinSubstitution([
         pkg_share,
@@ -20,11 +27,11 @@ def generate_launch_description():
         'farm_robot.urdf.xacro'
     ])
 
-    # Farm world file
+    # World file selected by argument
     world_file = PathJoinSubstitution([
         pkg_share,
         'worlds',
-        'farm.world.sdf'
+        [LaunchConfiguration('world'), '.world.sdf']
     ])
 
     # Expand the Xacro into a URDF robot description
@@ -114,6 +121,7 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
+        world_arg,
         gazebo,
         robot_state_publisher,
         spawn_robot,
