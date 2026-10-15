@@ -21,7 +21,7 @@ class CropRowFollower(Node):
         self.turn_speed      = 0.60
         self.centering_gain  = 0.8   # lowered from 1.2 to reduce oscillation
         self.wall_range      = 1.5   # max distance to count as wall present
-        self.turn_duration   = 5.5   # seconds for ~180° at 0.6 rad/s
+        self.turn_duration   = math.pi / self.turn_speed  # exact 180°
 
         self.state        = State.FOLLOWING
         self.turn_end     = None
@@ -102,7 +102,7 @@ class CropRowFollower(Node):
             remaining = self.turn_end - self.get_clock().now().nanoseconds / 1e9
             if remaining > 0:
                 cmd.angular.z = self.turn_speed * self.turn_dir
-                cmd.linear.x  = 0.04
+                cmd.linear.x  = 0.0   # pure rotation — no arc displacement
                 remaining_bucket = int(remaining)   # log once per second
                 if remaining_bucket != self._last_log.get('turn_sec'):
                     self._last_log['turn_sec'] = remaining_bucket
