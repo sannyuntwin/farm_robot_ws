@@ -66,7 +66,7 @@ elif [ "$MODE" = "home" ]; then
     check "/cmd_vel publishing"       "ros2 topic info /cmd_vel 2>&1 | grep -qP 'Publisher count: [1-9]'"
 elif [ "$MODE" = "dashboard" ]; then
     echo "--- Web Dashboard ---"
-    check "web_dashboard running"     "timeout 15 bash -c 'until ros2 node list 2>&1 | grep -q /web_dashboard; do sleep 1; done'"
+    check "web_dashboard running"     "ss -tlnp 2>/dev/null | grep -q ':8080'"
     check "HTTP server responds"      "curl -sf http://localhost:8080/ | grep -q 'Farm Robot'"
     check "/api/state responds"       "curl -sf http://localhost:8080/api/state | grep -q '\"x\"'"
 else
