@@ -2,7 +2,7 @@
 source /opt/ros/jazzy/setup.bash
 source ~/ros2/farm_robot_ws/install/setup.bash
 
-MODE=${1:-nav}   # usage: ./test.sh [nav|slam|crop|coverage|log|home|dashboard]  default: nav
+MODE=${1:-nav}   # usage: ./test.sh [nav|slam|crop|coverage|log|home|dashboard|waypoints]  default: nav
 
 PASS=0
 FAIL=0
@@ -69,6 +69,11 @@ elif [ "$MODE" = "dashboard" ]; then
     check "web_dashboard running"     "ss -tlnp 2>/dev/null | grep -q ':8080'"
     check "HTTP server responds"      "curl -sf http://localhost:8080/ | grep -q 'Farm Robot'"
     check "/api/state responds"       "curl -sf http://localhost:8080/api/state | grep -q '\"x\"'"
+elif [ "$MODE" = "waypoints" ]; then
+    echo "--- Waypoint Navigation ---"
+    check "bt_navigator active"          "ros2 lifecycle get /bt_navigator 2>&1 | grep -q 'active'"
+    check "/follow_waypoints available"  "ros2 action info /follow_waypoints 2>&1 | grep -q 'waypoint_follower'"
+    check "waypoint_navigator running"   "timeout 15 bash -c 'until ros2 node list 2>&1 | grep -q /farm_waypoint_navigator; do sleep 1; done'"
 else
     echo "--- Nav2 Nodes ---"
     check "/amcl_pose published"        "ros2 topic info /amcl_pose 2>&1 | grep -q 'Publisher count: 1'"
