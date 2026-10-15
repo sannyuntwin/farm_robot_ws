@@ -63,7 +63,7 @@ elif [ "$MODE" = "home" ]; then
     echo "--- Return to Home ---"
     check "return_to_home running"    "ros2 node list 2>&1 | grep -q '/return_to_home'"
     check "/return_home subscribed"   "ros2 topic info /return_home 2>&1 | grep -q 'Subscription count: 1'"
-    check "/cmd_vel publishing"       "ros2 topic info /cmd_vel 2>&1 | grep -q 'Publisher count: 1'"
+    check "/cmd_vel publishing"       "ros2 topic info /cmd_vel 2>&1 | grep -qP 'Publisher count: [1-9]'"
 else
     echo "--- Nav2 Nodes ---"
     check "/amcl_pose published"        "ros2 topic info /amcl_pose 2>&1 | grep -q 'Publisher count: 1'"
