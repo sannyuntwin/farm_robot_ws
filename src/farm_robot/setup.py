@@ -50,6 +50,7 @@ setup(
             'farm_waypoints = farm_robot.farm_waypoints:main',
             'crop_row_follower = farm_robot.crop_row_follower:main',
             'field_coverage = farm_robot.field_coverage:main',
+            'data_logger = farm_robot.data_logger:main',
         ],
     },
 )
