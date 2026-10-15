@@ -206,17 +206,21 @@
       at the WEST side of the field (x = -4.5), well outside the aisles.
       Visual only — not in the robot's navigation path.
     -->
-    <include>
-      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Construction Cone</uri>
-      <name>headland_cone_NW</name>
-      <pose>-4.5 3.8 0 0 0 0</pose>
-    </include>
+    <model name="headland_cone_NW"><static>true</static><pose>-4.5 3.8 0.2 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>0.3 0.3 0.4</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>0.3 0.3 0.4</size></box></geometry>
+          <material><ambient>1.0 0.35 0.0 1</ambient><diffuse>1.0 0.35 0.0 1</diffuse></material></visual>
+      </link>
+    </model>
 
-    <include>
-      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Construction Cone</uri>
-      <name>headland_cone_SW</name>
-      <pose>-4.5 -3.8 0 0 0 0</pose>
-    </include>
+    <model name="headland_cone_SW"><static>true</static><pose>-4.5 -3.8 0.2 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>0.3 0.3 0.4</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>0.3 0.3 0.4</size></box></geometry>
+          <material><ambient>1.0 0.35 0.0 1</ambient><diffuse>1.0 0.35 0.0 1</diffuse></material></visual>
+      </link>
+    </model>
 
     <!-- Yellow headland line on the ground (too flat for LiDAR, visual only) -->
     <model name="headland_north">
