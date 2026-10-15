@@ -27,6 +27,8 @@ class CropRowFollower(Node):
         self.turn_end     = None
         self.turn_dir     = 1.0   # +1 = left, −1 = right; flips each row
 
+        self._last_log    = {}   # throttle: only log when values change
+
         self._sub = self.create_subscription(
             LaserScan, '/scan_fixed', self._scan_cb, qos_profile_sensor_data)
         self._pub = self.create_publisher(Twist, '/cmd_vel', 10)
@@ -72,7 +74,7 @@ class CropRowFollower(Node):
             else:
                 cmd.linear.x = self.forward_speed
 
-                if front is not None and front < 0.4:
+                if front is not None and front < 0.25:
                     cmd.linear.x = 0.0
 
                 if left is not None and right is not None:
@@ -83,22 +85,33 @@ class CropRowFollower(Node):
                 elif right is not None:
                     cmd.angular.z = -self.centering_gain * 0.3
 
-                self.get_logger().info(
-                    f'[FOLLOW] front={fmt(front)}  left={fmt(left)}  right={fmt(right)}  '
-                    f'vx={cmd.linear.x:.2f}  wz={cmd.angular.z:.2f}'
+                key = (
+                    round(cmd.linear.x, 2),
+                    round(cmd.angular.z, 2),
+                    round(front or 0, 1),
                 )
+                if key != self._last_log.get('follow'):
+                    self._last_log['follow'] = key
+                    self.get_logger().info(
+                        f'[FOLLOW] front={fmt(front)}  left={fmt(left)}  right={fmt(right)}  '
+                        f'vx={cmd.linear.x:.2f}  wz={cmd.angular.z:.2f}'
+                    )
 
         elif self.state == State.TURNING:
             remaining = self.turn_end - self.get_clock().now().nanoseconds / 1e9
             if remaining > 0:
                 cmd.angular.z = self.turn_speed * self.turn_dir
                 cmd.linear.x  = 0.04
-                self.get_logger().info(
-                    f'[TURN ] dir={"left" if self.turn_dir > 0 else "right"}  '
-                    f'remaining={remaining:.1f}s'
-                )
+                remaining_bucket = int(remaining)   # log once per second
+                if remaining_bucket != self._last_log.get('turn_sec'):
+                    self._last_log['turn_sec'] = remaining_bucket
+                    self.get_logger().info(
+                        f'[TURN ] dir={"left" if self.turn_dir > 0 else "right"}  '
+                        f'remaining={remaining:.1f}s'
+                    )
             else:
                 self.get_logger().info('[TURN ] U-turn complete — resuming row follow.')
+                self._last_log = {}
                 self.state = State.FOLLOWING
 
         self._last_cmd = cmd
