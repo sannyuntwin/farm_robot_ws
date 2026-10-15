@@ -1,5 +1,6 @@
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import LaserScan
 
 
@@ -14,9 +15,9 @@ class ScanFrameFixer(Node):
             LaserScan,
             '/scan',
             self.scan_callback,
-            10
+            qos_profile_sensor_data
         )
-        self.publisher = self.create_publisher(LaserScan, '/scan_fixed', 10)
+        self.publisher = self.create_publisher(LaserScan, '/scan_fixed', qos_profile_sensor_data)
 
         self.get_logger().info(
             f'Scan frame fixer started: rewriting frame_id to "{self.frame_id}"'

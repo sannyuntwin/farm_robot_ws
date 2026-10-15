@@ -3,6 +3,7 @@ from enum import Enum
 
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Twist
 
@@ -27,7 +28,7 @@ class CropRowFollower(Node):
         self.turn_dir     = 1.0   # +1 = left, −1 = right; flips each row
 
         self._sub = self.create_subscription(
-            LaserScan, '/scan_fixed', self._scan_cb, 10)
+            LaserScan, '/scan_fixed', self._scan_cb, qos_profile_sensor_data)
         self._pub = self.create_publisher(Twist, '/cmd_vel', 10)
 
         self.get_logger().info('Crop row follower started.')
