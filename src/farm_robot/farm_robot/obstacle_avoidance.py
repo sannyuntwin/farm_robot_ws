@@ -6,9 +6,11 @@ from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Twist
 
-# Timer ticks needed per phase (timer runs at 10 Hz)
-_REVERSE_TICKS = 15   # 1.5 s reverse
-_TURN_TICKS    = 15   # 1.5 s turn (~69 ° at 0.8 rad/s)
+# Timer runs at 10 Hz → each tick = 0.1 s
+_REVERSE_TICKS      = 20   # 2.0 s  →  0.6 m back
+_TURN_TICKS_WALL    = 18   # 1.8 s  →  ~82°  (single wall)
+_TURN_TICKS_CORNER  = 30   # 3.0 s  → ~137°  (corner — need >90° to escape)
+_CORNER_THRESHOLD   = 1.5  # both diagonals inside this → corner detected
 
 
 class ObstacleAvoidance(Node):
@@ -19,15 +21,16 @@ class ObstacleAvoidance(Node):
         self.slow_speed    = 0.3
         self.turn_speed    = 0.8
 
-        self.emergency_distance   = 0.8
-        self.caution_distance     = 1.20
+        self.emergency_distance   = 0.9
+        self.caution_distance     = 1.50
         self.target_side_distance = 0.85
         self.centering_gain       = 1.0
 
         # State machine: 'forward' | 'reverse' | 'turn'
-        self._phase              = 'forward'
-        self._phase_ticks_left   = 0
-        self._turn_direction     = 1.0   # +1 = left, -1 = right
+        self._phase               = 'forward'
+        self._phase_ticks_left    = 0
+        self._pending_turn_ticks  = _TURN_TICKS_WALL
+        self._turn_direction      = 1.0   # +1 = left, -1 = right
 
         self.scan_subscriber = self.create_subscription(
             LaserScan, '/scan_fixed', self.scan_callback, qos_profile_sensor_data)
@@ -46,7 +49,7 @@ class ObstacleAvoidance(Node):
             self._phase_ticks_left -= 1
             if self._phase_ticks_left <= 0:
                 self._phase = 'turn'
-                self._phase_ticks_left = _TURN_TICKS
+                self._phase_ticks_left = self._pending_turn_ticks
                 cmd = Twist()
                 cmd.angular.z = self.turn_speed * self._turn_direction
                 self._last_cmd = cmd
@@ -70,15 +73,21 @@ class ObstacleAvoidance(Node):
         if self._phase != 'forward':
             return
 
-        front      = self.get_sector_distance(scan,   0, 30)
-        left       = self.get_sector_distance(scan,  90, 20)
-        right      = self.get_sector_distance(scan, -90, 20)
-        front_left = self.get_sector_distance(scan,  45, 20)
-        front_right= self.get_sector_distance(scan, -45, 20)
+        front       = self.get_sector_distance(scan,   0, 30)
+        left        = self.get_sector_distance(scan,  90, 20)
+        right       = self.get_sector_distance(scan, -90, 20)
+        front_left  = self.get_sector_distance(scan,  45, 20)
+        front_right = self.get_sector_distance(scan, -45, 20)
 
-        # ── Emergency: too close ahead ──────────────────────────────── #
+        # ── Emergency: obstacle too close ahead ─────────────────────── #
         if front is not None and front < self.emergency_distance:
-            # Pick direction with more clearance using diagonal readings
+
+            # Corner = both forward diagonals blocked
+            corner_left  = front_left  is not None and front_left  < _CORNER_THRESHOLD
+            corner_right = front_right is not None and front_right < _CORNER_THRESHOLD
+            is_corner = corner_left and corner_right
+
+            # Pick turn direction: side with more clearance
             def clearance(*vals):
                 valid = [v for v in vals if v is not None]
                 return min(valid) if valid else 10.0
@@ -87,15 +96,22 @@ class ObstacleAvoidance(Node):
             right_clear = clearance(right, front_right)
             self._turn_direction = 1.0 if left_clear >= right_clear else -1.0
 
+            # Set turn ticks based on situation
             self._phase = 'reverse'
             self._phase_ticks_left = _REVERSE_TICKS
+            # Store turn ticks so transition in _tick uses the right value
+            self._pending_turn_ticks = (
+                _TURN_TICKS_CORNER if is_corner else _TURN_TICKS_WALL
+            )
 
             cmd = Twist()
             cmd.linear.x = -0.3
             self._last_cmd = cmd
             self.cmd_publisher.publish(cmd)
             self.get_logger().info(
-                f'Emergency! front={front:.2f}m  turning {"left" if self._turn_direction>0 else "right"}'
+                f'Emergency! front={front:.2f}m  '
+                f'{"CORNER" if is_corner else "wall"}  '
+                f'turning {"left" if self._turn_direction > 0 else "right"}'
             )
             return
 
