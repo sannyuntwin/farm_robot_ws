@@ -1,32 +1,72 @@
 <?xml version="1.0"?>
 <robot name="farm_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-  <!-- Robot dimensions -->
-  <xacro:property name="body_length" value="0.40"/>
-  <xacro:property name="body_width" value="0.30"/>
-  <xacro:property name="body_height" value="0.10"/>
+  <!-- Robot dimensions (physics unchanged) -->
+  <xacro:property name="body_length"  value="0.40"/>
+  <xacro:property name="body_width"   value="0.30"/>
+  <xacro:property name="body_height"  value="0.10"/>
   <xacro:property name="wheel_radius" value="0.07"/>
-  <xacro:property name="wheel_width" value="0.04"/>
+  <xacro:property name="wheel_width"  value="0.04"/>
 
-  <!-- Main chassis -->
+  <!-- Shared materials -->
+  <material name="orange">    <color rgba="0.91 0.42 0.00 1.0"/></material>
+  <material name="dark_gray"> <color rgba="0.18 0.18 0.18 1.0"/></material>
+  <material name="silver">    <color rgba="0.72 0.72 0.72 1.0"/></material>
+  <material name="black">     <color rgba="0.05 0.05 0.05 1.0"/></material>
+  <material name="lidar_blue"><color rgba="0.10 0.45 0.80 1.0"/></material>
+
+  <!-- ═══════════════════════════════════════════
+       MAIN CHASSIS  (base_link)
+       ═══════════════════════════════════════════ -->
   <link name="base_link">
+
+    <!-- Lower hull plate -->
     <visual>
-      <origin xyz="0 0 0.12" rpy="0 0 0"/>
-      <geometry>
-        <box size="${body_length} ${body_width} ${body_height}"/>
-      </geometry>
-      <material name="green">
-        <color rgba="0.15 0.55 0.20 1.0"/>
-      </material>
+      <origin xyz="0 0 0.05" rpy="0 0 0"/>
+      <geometry><box size="${body_length} ${body_width} 0.06"/></geometry>
+      <material name="dark_gray"/>
     </visual>
 
+    <!-- Upper body / payload deck -->
+    <visual>
+      <origin xyz="0.02 0 0.135" rpy="0 0 0"/>
+      <geometry><box size="0.28 0.22 0.05"/></geometry>
+      <material name="orange"/>
+    </visual>
+
+    <!-- Front bumper bar -->
+    <visual>
+      <origin xyz="0.21 0 0.05" rpy="0 0 0"/>
+      <geometry><box size="0.02 0.34 0.06"/></geometry>
+      <material name="dark_gray"/>
+    </visual>
+
+    <!-- Rear bumper bar -->
+    <visual>
+      <origin xyz="-0.21 0 0.05" rpy="0 0 0"/>
+      <geometry><box size="0.02 0.34 0.06"/></geometry>
+      <material name="dark_gray"/>
+    </visual>
+
+    <!-- Side rails -->
+    <visual>
+      <origin xyz="0 0.155 0.10" rpy="0 0 0"/>
+      <geometry><box size="${body_length - 0.04} 0.01 0.02"/></geometry>
+      <material name="silver"/>
+    </visual>
+    <visual>
+      <origin xyz="0 -0.155 0.10" rpy="0 0 0"/>
+      <geometry><box size="${body_length - 0.04} 0.01 0.02"/></geometry>
+      <material name="silver"/>
+    </visual>
+
+    <!-- Collision (unchanged) -->
     <collision>
       <origin xyz="0 0 0.12" rpy="0 0 0"/>
-      <geometry>
-        <box size="${body_length} ${body_width} ${body_height}"/>
-      </geometry>
+      <geometry><box size="${body_length} ${body_width} ${body_height}"/></geometry>
     </collision>
 
+    <!-- Inertial (unchanged) -->
     <inertial>
       <origin xyz="0 0 0.12" rpy="0 0 0"/>
       <mass value="8.0"/>
@@ -35,26 +75,50 @@
     </inertial>
   </link>
 
-  <!-- Wheel macro -->
+  <!-- Gazebo body colors -->
+  <gazebo reference="base_link">
+    <visual name="lower_hull">
+      <material>
+        <ambient>0.18 0.18 0.18 1</ambient>
+        <diffuse>0.18 0.18 0.18 1</diffuse>
+      </material>
+    </visual>
+  </gazebo>
+
+  <!-- ═══════════════════════════════════════════
+       WHEELS  (positions/physics unchanged)
+       ═══════════════════════════════════════════ -->
   <xacro:macro name="wheel" params="name x y">
     <link name="${name}">
+
+      <!-- Tyre -->
       <visual>
         <origin xyz="0 0 0" rpy="1.5707963 0 0"/>
-        <geometry>
-          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
-        </geometry>
-        <material name="black">
-          <color rgba="0.08 0.08 0.08 1.0"/>
-        </material>
+        <geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry>
+        <material name="black"/>
       </visual>
 
+      <!-- Hub disc -->
+      <visual>
+        <origin xyz="0 0 0" rpy="1.5707963 0 0"/>
+        <geometry><cylinder radius="0.038" length="${wheel_width + 0.005}"/></geometry>
+        <material name="silver"/>
+      </visual>
+
+      <!-- Hub centre bolt -->
+      <visual>
+        <origin xyz="0 0 0" rpy="1.5707963 0 0"/>
+        <geometry><cylinder radius="0.010" length="${wheel_width + 0.012}"/></geometry>
+        <material name="orange"/>
+      </visual>
+
+      <!-- Collision (unchanged) -->
       <collision>
         <origin xyz="0 0 0" rpy="1.5707963 0 0"/>
-        <geometry>
-          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
-        </geometry>
+        <geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry>
       </collision>
 
+      <!-- Inertial (unchanged) -->
       <inertial>
         <mass value="0.5"/>
         <inertia ixx="0.002" ixy="0" ixz="0"
@@ -70,57 +134,99 @@
     </joint>
   </xacro:macro>
 
-  <!-- Four wheels -->
+  <!-- Four wheels (positions unchanged) -->
   <xacro:wheel name="front_left_wheel"  x="0.13"  y="0.17"/>
   <xacro:wheel name="front_right_wheel" x="0.13"  y="-0.17"/>
   <xacro:wheel name="rear_left_wheel"   x="-0.13" y="0.17"/>
   <xacro:wheel name="rear_right_wheel"  x="-0.13" y="-0.17"/>
 
-
-  <!-- Gazebo Sim differential-drive controller -->
+  <!-- ═══════════════════════════════════════════
+       GAZEBO DIFF-DRIVE PLUGIN  (unchanged)
+       ═══════════════════════════════════════════ -->
   <gazebo>
-    <plugin
-      filename="gz-sim-diff-drive-system"
-      name="gz::sim::systems::DiffDrive">
-
-      <!-- Wheels on the left side -->
+    <plugin filename="gz-sim-diff-drive-system"
+            name="gz::sim::systems::DiffDrive">
       <left_joint>front_left_wheel_joint</left_joint>
       <left_joint>rear_left_wheel_joint</left_joint>
-
-      <!-- Wheels on the right side -->
       <right_joint>front_right_wheel_joint</right_joint>
       <right_joint>rear_right_wheel_joint</right_joint>
-
-      <!-- Robot dimensions -->
       <wheel_separation>0.34</wheel_separation>
       <wheel_radius>0.07</wheel_radius>
-
-      <!-- Command and odometry topics -->
       <topic>/cmd_vel</topic>
       <odom_topic>/odom</odom_topic>
       <frame_id>odom</frame_id>
       <child_frame_id>base_link</child_frame_id>
-
-      <!-- Publish odometry -->
       <odom_publish_frequency>30</odom_publish_frequency>
     </plugin>
   </gazebo>
 
-  
-  <!-- LiDAR sensor mount -->
-  <link name="lidar_link">
+  <!-- ═══════════════════════════════════════════
+       FRONT CAMERA MOUNT  (visual only)
+       ═══════════════════════════════════════════ -->
+  <link name="camera_link">
+    <!-- Camera body -->
     <visual>
-      <geometry>
-        <cylinder radius="0.04" length="0.04"/>
-      </geometry>
-      <material name="lidar_black">
-        <color rgba="0.1 0.1 0.1 1.0"/>
-      </material>
+      <geometry><box size="0.030 0.090 0.030"/></geometry>
+      <material name="dark_gray"/>
     </visual>
+    <!-- Lens ring -->
+    <visual>
+      <origin xyz="0.016 0 0" rpy="0 1.5707963 0"/>
+      <geometry><cylinder radius="0.011" length="0.008"/></geometry>
+      <material name="black"/>
+    </visual>
+    <collision><geometry><box size="0.030 0.090 0.030"/></geometry></collision>
+    <inertial>
+      <mass value="0.05"/>
+      <inertia ixx="0.00001" ixy="0" ixz="0"
+               iyy="0.00001" iyz="0" izz="0.00001"/>
+    </inertial>
+  </link>
+  <joint name="camera_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="camera_link"/>
+    <origin xyz="0.215 0 0.155" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ═══════════════════════════════════════════
+       LIDAR MOUNT POLE  (visual only)
+       ═══════════════════════════════════════════ -->
+  <link name="lidar_pole_link">
+    <visual>
+      <geometry><cylinder radius="0.012" length="0.08"/></geometry>
+      <material name="dark_gray"/>
+    </visual>
+    <collision><geometry><cylinder radius="0.012" length="0.08"/></geometry></collision>
+    <inertial>
+      <mass value="0.03"/>
+      <inertia ixx="0.00001" ixy="0" ixz="0"
+               iyy="0.00001" iyz="0" izz="0.00001"/>
+    </inertial>
+  </link>
+  <joint name="lidar_pole_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="lidar_pole_link"/>
+    <origin xyz="0.02 0 0.18" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ═══════════════════════════════════════════
+       LIDAR SENSOR  (position unchanged: 0 0 0.22)
+       ═══════════════════════════════════════════ -->
+  <link name="lidar_link">
+    <!-- Sensor body -->
+    <visual>
+      <geometry><cylinder radius="0.048" length="0.050"/></geometry>
+      <material name="lidar_blue"/>
+    </visual>
+    <!-- Top cap -->
+    <visual>
+      <origin xyz="0 0 0.030" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.030" length="0.010"/></geometry>
+      <material name="dark_gray"/>
+    </visual>
+
     <collision>
-      <geometry>
-        <cylinder radius="0.04" length="0.04"/>
-      </geometry>
+      <geometry><cylinder radius="0.04" length="0.04"/></geometry>
     </collision>
     <inertial>
       <mass value="0.1"/>
@@ -135,6 +241,7 @@
     <origin xyz="0 0 0.22" rpy="0 0 0"/>
   </joint>
 
+  <!-- Gazebo LiDAR sensor (unchanged) -->
   <gazebo reference="lidar_link">
     <sensor name="farm_lidar" type="gpu_lidar">
       <topic>/scan</topic>
@@ -158,7 +265,5 @@
       <visualize>true</visualize>
     </sensor>
   </gazebo>
-
-
 
 </robot>

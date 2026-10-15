@@ -1,192 +1,204 @@
-# Farm Robot 🤖
+# Farm Robot
 
-A simulated farm robot built with **ROS 2 Jazzy**, **Gazebo**, **SLAM Toolbox**, and **Nav2**. The project aims to support autonomous navigation by mapping the environment, detecting obstacles with LiDAR, and planning robot movements.
+A fully autonomous farm robot simulation built with **ROS 2 Jazzy**, **Gazebo Harmonic**, **Nav2**, and **SLAM Toolbox**. The robot operates in a simulated 10 m × 10 m farm world with crop rows, using LiDAR for perception, AMCL for localisation, and Nav2 for path planning.
 
 ## Features
 
-- Robot simulation in Gazebo
-- LiDAR-based obstacle detection
-- 2D environment mapping using SLAM Toolbox
-- Robot visualization with RViz2
-- Autonomous navigation using Nav2
-- Odometry and TF coordinate transforms
+| # | Feature | Node | Description |
+|---|---------|------|-------------|
+| 1 | Simulation | Gazebo + bridges | Physics, LiDAR, odometry, TF |
+| 2 | SLAM Mapping | `slam_toolbox` | Online async map building |
+| 3 | Autonomous Navigation | Nav2 stack | AMCL + DWB planner + bt_navigator |
+| 4 | Waypoint Following | `farm_waypoints` | Patrol 6-point crop-aisle route |
+| 5 | Crop Row Following | `crop_row_follower` | LiDAR-guided row navigation |
+| 6 | Field Coverage | `field_coverage` | Systematic coverage of the field |
+| 7 | Data Logging | `data_logger` | CSV log of odometry + scan |
+| 8 | Return to Home | `return_to_home` | Navigate back to spawn point |
+| 9 | Web Dashboard | `web_dashboard` | Live browser UI at port 8080 |
 
 ## Technology Stack
 
-- Ubuntu / WSL2
-- ROS 2 Jazzy
-- Gazebo
-- SLAM Toolbox
-- Nav2
-- RViz2
-- Python
-- URDF / robot description files
+- **OS:** Ubuntu 24.04 (developed on Windows 11 with WSL / direct Ubuntu)
+- **ROS 2:** Jazzy Jalisco
+- **Simulator:** Gazebo Harmonic (gz-sim 8)
+- **Navigation:** Nav2 (AMCL, DWB, NavFn, bt_navigator)
+- **Mapping:** SLAM Toolbox (online async)
+- **Visualisation:** RViz2
+- **Language:** Python 3.12
 
-## Project Structure
 ## Project Structure
 
 ```text
 farm_robot_ws/
-├── README.md
-├── frames_2026-10-14_21.46.34.gv
-├── frames_2026-10-14_21.46.34.pdf
+├── test.sh                          # system-check test runner
 └── src/
     └── farm_robot/
         ├── config/
-        │   ├── farm_slam.yaml
-        │   ├── mapper_params_online_async.yaml
-        │   ├── nav2_params.yaml
-        │   └── nav2_rviz.rviz
+        │   ├── farm_slam.yaml                    # SLAM Toolbox config
+        │   ├── mapper_params_online_async.yaml   # online mapping params
+        │   ├── nav2_params.yaml                  # full Nav2 config (AMCL, DWB, costmaps…)
+        │   └── nav2_rviz.rviz                    # RViz layout
         ├── description/
-        │   └── farm_robot.urdf.xacro
+        │   └── farm_robot.urdf.xacro             # robot model (links, joints, sensors)
         ├── farm_robot/
-        │   ├── __init__.py
-        │   ├── obstacle_avoidance.py
-        │   ├── odom_tf_broadcaster.py
-        │   └── scan_frame_fixer.py
+        │   ├── obstacle_avoidance.py             # reactive obstacle avoidance
+        │   ├── odom_tf_broadcaster.py            # odom → base_link TF publisher
+        │   ├── scan_frame_fixer.py               # re-stamps LiDAR to /scan_fixed
+        │   ├── farm_waypoints.py                 # waypoint patrol (Feature 4)
+        │   ├── crop_row_follower.py              # crop-row guidance (Feature 5)
+        │   ├── field_coverage.py                 # field coverage planner (Feature 6)
+        │   ├── data_logger.py                    # CSV data logger (Feature 7)
+        │   ├── return_to_home.py                 # return-to-home (Feature 8)
+        │   └── web_dashboard.py                  # HTTP dashboard (Feature 9)
         ├── launch/
-        │   ├── mapping_navigation.launch.py
-        │   ├── navigation.launch.py
-        │   └── simulation.launch.py
+        │   ├── simulation.launch.py              # Gazebo only
+        │   ├── slam.launch.py                    # SLAM mapping
+        │   ├── navigation.launch.py              # Nav2 stack
+        │   └── bringup.launch.py                 # full stack (sim + nav + rviz)
         ├── maps/
-        │   ├── farm_map.pgm
-        │   ├── farm_map.yaml
-        │   └── .gitkeep
+        │   ├── farm_map.pgm                      # saved occupancy grid
+        │   └── farm_map.yaml                     # map metadata
+        ├── worlds/
+        │   └── farm.world.sdf                    # 10 m × 10 m farm world
         ├── package.xml
-        ├── resource/
-        │   └── farm_robot
-        ├── setup.cfg
         ├── setup.py
-        └── worlds/
-            └── farm.world.sdf
+        └── setup.cfg
 ```
-
-### Directory and File Descriptions
-
-| Path | Description |
-|---|---|
-| `config/farm_slam.yaml` | SLAM Toolbox configuration for mapping |
-| `config/mapper_params_online_async.yaml` | Online asynchronous mapping parameters |
-| `config/nav2_params.yaml` | Navigation, planning, and controller configuration |
-| `config/nav2_rviz.rviz` | RViz configuration for navigation visualization |
-| `description/farm_robot.urdf.xacro` | Robot model, links, joints, and sensor descriptions |
-| `farm_robot/obstacle_avoidance.py` | Obstacle avoidance node |
-| `farm_robot/odom_tf_broadcaster.py` | Publishes odometry-related TF transforms |
-| `farm_robot/scan_frame_fixer.py` | Processes LiDAR scan frame information |
-| `launch/simulation.launch.py` | Launches the Gazebo simulation |
-| `launch/mapping_navigation.launch.py` | Launches the mapping and navigation setup |
-| `launch/navigation.launch.py` | Launches the navigation setup |
-| `maps/farm_map.pgm` | Saved occupancy-grid map image |
-| `maps/farm_map.yaml` | Saved map metadata |
-| `worlds/farm.world.sdf` | Gazebo farm environment |
-| `package.xml` | Package metadata and dependencies |
-| `setup.py` | Python package installation configuration |
-| `setup.cfg` | Python package script installation settings |
-| `resource/farm_robot` | ROS 2 package resource marker |
-| `frames_*.gv` | Generated TF frame graph in Graphviz format |
-| `frames_*.pdf` | PDF visualization of the TF frame graph |
-
-### Technologies
-
-- ROS 2 Jazzy
-- Gazebo
-- SLAM Toolbox
-- Nav2
-- RViz2
-- Python
-- URDF/Xacro
-- TF2
-- LiDAR and odometry
-
-
 
 ## Prerequisites
 
-Install ROS 2 Jazzy and the required Gazebo, SLAM Toolbox, and Nav2 packages before running the project.
-
-## Build the Project
-
 ```bash
-source /opt/ros/jazzy/setup.bash
-cd ~/ros2/farm_robot_ws
-colcon build --merge-install --packages-select farm_robot
-source install/local_setup.bash
+sudo apt install \
+  ros-jazzy-navigation2 \
+  ros-jazzy-nav2-bringup \
+  ros-jazzy-slam-toolbox \
+  ros-jazzy-ros-gz-bridge \
+  ros-jazzy-robot-state-publisher \
+  ros-jazzy-xacro
 ```
 
-## Run the Simulation
+## Build
 
-### 1. Start Gazebo
+```bash
+cd ~/ros2/farm_robot_ws
+source /opt/ros/jazzy/setup.bash
+colcon build --packages-select farm_robot
+pip3 install -e src/farm_robot --no-deps --break-system-packages
+```
 
-Open Terminal 1:
+> Run `pip3 install -e ...` again after every `colcon build`.
+
+## Environment Setup
+
+Add to `~/.bashrc` (or run before each session):
 
 ```bash
 source /opt/ros/jazzy/setup.bash
-cd ~/ros2/farm_robot_ws
-source install/local_setup.bash
-export AMENT_PREFIX_PATH="$HOME/ros2/farm_robot_ws/install:$AMENT_PREFIX_PATH"
+source ~/ros2/farm_robot_ws/install/setup.bash
+export AMENT_PREFIX_PATH="$HOME/ros2/farm_robot_ws/install/farm_robot:$AMENT_PREFIX_PATH"
+export PYTHONPATH="$HOME/ros2/farm_robot_ws/install/farm_robot/lib/python3.12/site-packages:$PYTHONPATH"
+```
+
+## Running the Simulation
+
+### Full stack (recommended)
+
+Launches simulation, Nav2, and RViz2 in a single command. Nav2 starts 15 s after Gazebo to allow TF to stabilise.
+
+```bash
+ros2 launch farm_robot bringup.launch.py
+```
+
+Wait ~60 s for all lifecycle nodes to reach **active** state.
+
+### SLAM mapping (separate)
+
+Terminal 1 — simulation:
+```bash
 ros2 launch farm_robot simulation.launch.py
 ```
 
-### 2. Start SLAM Toolbox
-
-Open Terminal 2:
-
+Terminal 2 — SLAM:
 ```bash
-source /opt/ros/jazzy/setup.bash
-cd ~/ros2/farm_robot_ws
-source install/local_setup.bash
-export AMENT_PREFIX_PATH="$HOME/ros2/farm_robot_ws/install:$AMENT_PREFIX_PATH"
-ros2 launch slam_toolbox online_async_launch.py \
-  slam_params_file:=$HOME/ros2/farm_robot_ws/src/farm_robot/config/farm_slam.yaml \
-  use_sim_time:=True
+ros2 launch farm_robot slam.launch.py
 ```
 
-### 3. Start Nav2
+## Feature Usage
 
-Open Terminal 3:
-
-```bash
-source /opt/ros/jazzy/setup.bash
-cd ~/ros2/farm_robot_ws
-source install/local_setup.bash
-export AMENT_PREFIX_PATH="$HOME/ros2/farm_robot_ws/install:$AMENT_PREFIX_PATH"
-ros2 launch farm_robot mapping_navigation.launch.py
-```
-
-### 4. Start RViz2
-
-Open Terminal 4:
+### Waypoint Patrol
 
 ```bash
-source /opt/ros/jazzy/setup.bash
-rviz2
+ros2 run farm_robot farm_waypoints
 ```
 
-Set the RViz2 **Fixed Frame** to `map`, then add the map and LiDAR scan displays.
+Follows a 6-point route: aisle C south → north, then aisle B north → south.
 
-## Verify Topics
+### Crop Row Follower
 
 ```bash
-ros2 topic list
-ros2 topic info /map
-ros2 topic info /odom
-ros2 topic hz /scan_fixed
+ros2 run farm_robot crop_row_follower
 ```
 
-## Current Progress
+### Field Coverage
 
-- [x] Gazebo simulation running
-- [x] LiDAR scan publishing
-- [x] SLAM map publishing
-- [x] Nav2 lifecycle nodes active
-- [x] Map and LiDAR scan visible in RViz2
-- [ ] Expand the map by exploring the environment
-- [ ] Verify autonomous navigation to a safe goal
+```bash
+ros2 run farm_robot field_coverage
+```
 
-## Safety and Testing
+### Data Logger
 
-Test navigation in simulation first. Choose goals only in clearly mapped free space and monitor the robot in Gazebo.
+```bash
+ros2 run farm_robot data_logger
+```
+
+Logs are saved to `~/farm_robot_logs/robot_log_<timestamp>.csv`.
+
+### Return to Home
+
+```bash
+ros2 run farm_robot return_to_home
+```
+
+Trigger via topic:
+```bash
+ros2 topic pub /return_home std_msgs/Bool "data: true" --once
+```
+
+### Web Dashboard
+
+```bash
+ros2 run farm_robot web_dashboard
+```
+
+Open `http://localhost:8080` in a browser. Shows live position, velocity, LiDAR distances, and a **Return to Home** button.
+
+## System Tests
+
+`test.sh` verifies topics, TF chain, and mode-specific nodes:
+
+```bash
+chmod +x test.sh
+./test.sh nav          # Nav2 full stack
+./test.sh slam         # SLAM mapping
+./test.sh waypoints    # waypoint follower
+./test.sh crop         # crop row follower
+./test.sh coverage     # field coverage
+./test.sh log          # data logger
+./test.sh home         # return to home
+./test.sh dashboard    # web dashboard
+```
+
+Expected output: all checks `[PASS]`.
+
+## TF Tree
+
+```
+map
+ └── odom          (published by AMCL)
+      └── base_link (published by odom_tf_broadcaster)
+           └── lidar_link (published by robot_state_publisher)
+```
 
 ## License
 
-Add your preferred open-source license here if you plan to share the project publicly.
+Apache-2.0
