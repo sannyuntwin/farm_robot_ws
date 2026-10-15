@@ -49,6 +49,7 @@ setup(
             'odom_tf_broadcaster = farm_robot.odom_tf_broadcaster:main',
             'farm_waypoints = farm_robot.farm_waypoints:main',
             'crop_row_follower = farm_robot.crop_row_follower:main',
+            'field_coverage = farm_robot.field_coverage:main',
         ],
     },
 )
